@@ -40,11 +40,13 @@
             line-height: 1.6;
             overflow-x: hidden;
             overscroll-behavior-x: none;
+
+            padding-top: var(--header-h, 0px);
         }
 
 
         body.menu-open {
-            overflow: hidden;
+            overflow: auto;
             touch-action: none;
         }
 
@@ -75,12 +77,15 @@
 
         header {
             padding: 2rem 0;
-            position: sticky;
+            /* Use fixed positioning for consistent "sticky" behavior across browsers */
+            position: fixed;
             top: 0;
+            left: 0;
+            right: 0;
             background: rgba(10, 14, 39, 0.8);
             backdrop-filter: blur(10px);
             border-bottom: 1px solid var(--border);
-            z-index: 100;
+            z-index: 1100;
             animation: slideDown 0.6s ease-out;
         }
 
@@ -152,7 +157,7 @@
             border: none;
             cursor: pointer;
             padding: 0.5rem;
-            z-index: 101;
+            z-index: 1300;
         }
 
         .hamburger span {
@@ -177,6 +182,7 @@
 
 
         .back-to-top {
+            display: none;
             position: fixed;
             bottom: 2rem;
             right: 2rem;
@@ -188,15 +194,16 @@
             border: none;
             cursor: pointer;
             z-index: 99;
-            display: flex;
+
+            /* Perfect icon centering */
             align-items: center;
             justify-content: center;
+            padding: 0;
+            line-height: 1;
             font-size: 1.5rem;
+
             transition: all 0.3s ease;
             box-shadow: 0 4px 20px rgba(0, 245, 160, 0.3);
-            opacity: 0;
-            visibility: hidden;
-            transform: translateY(20px);
         }
 
         .back-to-top:hover {
@@ -205,13 +212,11 @@
         }
 
         .back-to-top.show {
-            opacity: 1;
-            visibility: visible;
-            transform: translateY(0);
-            animation: fadeInUp 0.3s ease-out;
+            display: flex;
+            animation: fadeInUpBtn 0.3s ease-out;
         }
 
-        @keyframes fadeInUp {
+        @keyframes fadeInUpBtn {
             from {
                 opacity: 0;
                 transform: translateY(20px);
@@ -222,6 +227,12 @@
                 transform: translateY(0);
             }
         }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
 
 
         .hero {
@@ -368,7 +379,7 @@
             padding: 2rem;
             transition: all 0.3s ease;
             position: relative;
-            overflow: hidden;
+            overflow: auto;
         }
 
         .project-card::before {
@@ -570,15 +581,17 @@
                 top: 0;
                 right: 0;
                 height: 100vh;
+                padding-top: var(--header-h, 0px);
                 width: 70%;
                 max-width: 300px;
                 background: var(--secondary);
                 flex-direction: column;
-                justify-content: center;
+                justify-content: flex-start;
+                padding-bottom: 2rem;
                 align-items: center;
                 gap: 2rem;
                 border-left: 1px solid var(--border);
-                z-index: 100;
+                z-index: 1200;
 
 
                 transform: translateX(110%);
@@ -586,7 +599,7 @@
                 will-change: transform;
 
 
-                overflow: hidden;
+                overflow: auto;
                 touch-action: none;
                 overscroll-behavior: contain;
             }
@@ -694,6 +707,11 @@
         .scroll-reveal.revealed {
             opacity: 1;
             transform: translateY(0);
+        }
+
+        /* Offset anchor scrolling so sections don't hide under the fixed header */
+        [id] {
+            scroll-margin-top: calc(var(--header-h, 0px) + 16px);
         }
     </style>
 </head>
@@ -1141,6 +1159,20 @@
     <script>
         const backToTopButton = document.getElementById('backToTop');
 
+
+
+        const headerEl = document.querySelector('header');
+
+        function setHeaderHeight() {
+            if (!headerEl) return;
+            document.documentElement.style.setProperty('--header-h', `${headerEl.offsetHeight}px`);
+        }
+
+        // Set immediately and keep in sync (fonts/responsive changes can affect height)
+        window.addEventListener('load', setHeaderHeight);
+        window.addEventListener('resize', setHeaderHeight);
+        setHeaderHeight();
+
         window.addEventListener('scroll', () => {
             if (window.pageYOffset > 300) {
                 backToTopButton.classList.add('show');
@@ -1211,10 +1243,9 @@
 
                 const target = document.querySelector(this.getAttribute('href'));
                 if (target) {
-                    target.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start'
-                    });
+                    const headerH = headerEl ? headerEl.offsetHeight : 0;
+                    const y = target.getBoundingClientRect().top + window.pageYOffset - headerH - 8;
+                    window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
                 }
             });
         });
