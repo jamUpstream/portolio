@@ -226,14 +226,10 @@
 
         .hero {
             padding: 8rem 0 6rem;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
             animation: fadeIn 0.8s ease-out 0.2s both;
-        }
 
-        .hero .container {
-            width: 100%;
+            min-height: 100vh;
+            /* prevent About from peeking */
         }
 
         @keyframes fadeIn {
@@ -698,39 +694,6 @@
         .scroll-reveal.revealed {
             opacity: 1;
             transform: translateY(0);
-        }
-
-
-        .hero {
-            min-height: 100vh;
-            padding: 6rem 0 5rem;
-            align-items: center;
-        }
-
-        .hero .container {
-            transform: translateY(-1.25rem);
-        }
-
-        @media (max-width: 768px) {
-            .hero {
-                padding: 4.5rem 0 3.5rem;
-            }
-
-            .hero .container {
-                transform: translateY(-0.75rem);
-            }
-        }
-
-
-        @media (max-width: 768px) {
-            .hero {
-                padding-top: 4rem;
-                min-height: 100vh;
-            }
-
-            .hero-content {
-                transform: translateY(-2.5rem);
-            }
         }
     </style>
 </head>
