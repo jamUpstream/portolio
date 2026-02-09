@@ -28,12 +28,24 @@
             --border: #27273A;
         }
 
+
+        html {
+            overflow-x: hidden;
+        }
+
         body {
             font-family: 'DM Sans', sans-serif;
             background: var(--primary);
             color: var(--text);
             line-height: 1.6;
             overflow-x: hidden;
+            overscroll-behavior-x: none;
+        }
+
+        /* Prevent scrolling when mobile menu is open */
+        body.menu-open {
+            overflow: hidden;
+            touch-action: none;
         }
 
         /* Grid Background */
@@ -162,6 +174,50 @@
         .hamburger.active span:nth-child(3) {
             transform: rotate(-45deg) translate(7px, -7px);
         }
+
+        /* Back to Top Button */
+        .back-to-top {
+            display: none;
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--accent);
+            color: var(--primary);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            z-index: 99;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 20px rgba(0, 245, 160, 0.3);
+        }
+
+        .back-to-top:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 30px rgba(0, 245, 160, 0.5);
+        }
+
+        .back-to-top.show {
+            display: flex;
+            animation: fadeInUp 0.3s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
 
         /* Hero Section */
         .hero {
@@ -505,7 +561,7 @@
             .nav-links {
                 position: fixed;
                 top: 0;
-                right: -100%;
+                right: 0;
                 height: 100vh;
                 width: 70%;
                 max-width: 300px;
@@ -514,13 +570,22 @@
                 justify-content: center;
                 align-items: center;
                 gap: 2rem;
-                transition: right 0.3s ease;
                 border-left: 1px solid var(--border);
                 z-index: 100;
+
+                /* Use transform for off-canvas to avoid creating horizontal scroll */
+                transform: translateX(110%);
+                transition: transform 0.3s ease;
+                will-change: transform;
+
+                /* Prevent any scrolling on the menu itself */
+                overflow: hidden;
+                touch-action: none;
+                overscroll-behavior: contain;
             }
 
             .nav-links.active {
-                right: 0;
+                transform: translateX(0);
             }
 
             .nav-links a {
@@ -978,26 +1043,6 @@
                             </ul>
                         </div>
                     </div>
-                    <div class="project-card fade-in-up" style="animation-delay: 0.1s;">
-                        <div class="project-number">13</div>
-                        <h3 class="project-title">Dropbox File Matching System Using Naming Conventions</h3>
-                        <div class="project-stack">
-                            <span class="tech-tag">Dropbox</span>
-                            <span class="tech-tag">Automation Logic</span>
-                        </div>
-                        <p class="project-description"><strong>Problem:</strong> Multi-file products were mismatched
-                            during fulfillment.</p>
-                        <p class="project-description"><strong>Solution:</strong> Implemented strict naming-based
-                            matching logic.</p>
-                        <div class="project-result">
-                            <div class="result-title">Results</div>
-                            <ul class="result-list">
-                                <li>Accurate file pairing</li>
-                                <li>Fewer customer issues</li>
-                                <li>Cleaner fulfillment process</li>
-                            </ul>
-                        </div>
-                    </div>
                 </div>
             </div>
             <!-- Game Development -->
@@ -1005,7 +1050,7 @@
                 <h3 class="category-title">Game Development Projects</h3>
                 <div class="projects-grid">
                     <div class="project-card fade-in-up">
-                        <div class="project-number">14</div>
+                        <div class="project-number">13</div>
                         <h3 class="project-title">Bark of Survival</h3>
                         <div class="project-stack">
                             <span class="tech-tag">HTML5 Canvas</span>
@@ -1018,7 +1063,7 @@
                             style="margin-top:1rem;display:inline-block;" target="_blank">Open Game ↗</a>
                     </div>
                     <div class="project-card fade-in-up" style="animation-delay:0.1s;">
-                        <div class="project-number">15</div>
+                        <div class="project-number">14</div>
                         <h3 class="project-title">freeworm.io</h3>
                         <div class="project-stack">
                             <span class="tech-tag">JavaScript</span>
@@ -1032,7 +1077,7 @@
                             style="margin-top:1rem;display:inline-block;" target="_blank">Open Game ↗</a>
                     </div>
                     <div class="project-card fade-in-up" style="animation-delay:0.2s;">
-                        <div class="project-number">16</div>
+                        <div class="project-number">15</div>
                         <h3 class="project-title">Yatzy</h3>
                         <div class="project-stack">
                             <span class="tech-tag">JavaScript</span>
@@ -1074,12 +1119,38 @@
             </div>
         </div>
     </section>
+
+    <!-- Back to Top Button -->
+    <button class="back-to-top" id="backToTop" aria-label="Back to top">
+        ↑
+    </button>
+
     <footer>
         <div class="container">
             <p class="footer-text">© 2026 James Tercenio. Built with precision.</p>
         </div>
     </footer>
     <script>
+        // Back to Top Button
+        const backToTopButton = document.getElementById('backToTop');
+
+        // Show/hide button based on scroll position
+        window.addEventListener('scroll', () => {
+            if (window.pageYOffset > 300) {
+                backToTopButton.classList.add('show');
+            } else {
+                backToTopButton.classList.remove('show');
+            }
+        });
+
+        // Scroll to top when clicked
+        backToTopButton.addEventListener('click', () => {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+
         // Hamburger menu toggle
         const hamburger = document.querySelector('.hamburger');
         const navLinks = document.querySelector('.nav-links');
@@ -1087,14 +1158,7 @@
         hamburger.addEventListener('click', () => {
             hamburger.classList.toggle('active');
             navLinks.classList.toggle('active');
-        });
-
-        // Close menu when clicking on a link
-        document.querySelectorAll('.nav-links a').forEach(link => {
-            link.addEventListener('click', () => {
-                hamburger.classList.remove('active');
-                navLinks.classList.remove('active');
-            });
+            document.body.classList.toggle('menu-open');
         });
 
         // Close menu when clicking outside
@@ -1102,6 +1166,7 @@
             if (!hamburger.contains(e.target) && !navLinks.contains(e.target)) {
                 hamburger.classList.remove('active');
                 navLinks.classList.remove('active');
+                document.body.classList.remove('menu-open');
             }
         });
 
@@ -1139,6 +1204,13 @@
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function (e) {
                 e.preventDefault();
+
+                // Close menu if it's open
+                hamburger.classList.remove('active');
+                navLinks.classList.remove('active');
+                document.body.classList.remove('menu-open');
+
+                // Smooth scroll to target
                 const target = document.querySelector(this.getAttribute('href'));
                 if (target) {
                     target.scrollIntoView({
