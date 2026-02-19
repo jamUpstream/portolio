@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>James Tercenio – Portfolio</title>
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=DM+Sans:wght@400;500;700&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link rel="stylesheet" href="styles.css" />
+    <!-- Instant theme pre-apply: runs synchronously before first paint to prevent flash -->
+    <script>
+        (function () {
+            // Hide page immediately to prevent any flash; restored after settings applied
+            document.documentElement.style.visibility = 'hidden';
+            try {
+                var params = new URLSearchParams(window.location.search);
+                var accent = params.get('accent');
+                var dim = params.get('dim');
+                var theme = params.get('theme');
+                var bgEffect = params.get('bg');
+
+                if (accent) { localStorage.setItem('pf_accent', accent); localStorage.setItem('pf_dim', dim || accent); }
+                if (theme) localStorage.setItem('pf_theme', theme);
+                if (bgEffect) localStorage.setItem('pf_bgEffect', bgEffect);
+
+                // Handle reset signal from other site
+                if (params.get('reset') === '1') {
+                    ['pf_accent', 'pf_dim', 'pf_theme', 'pf_bgEffect'].forEach(function (k) { try { localStorage.removeItem(k); } catch (e) { } });
+                    history.replaceState(null, '', window.location.pathname);
+                    document.documentElement.style.visibility = '';
+                    return; // use defaults, don't apply any saved theme
+                }
+
+                if (accent || theme || bgEffect) history.replaceState(null, '', window.location.pathname);
+
+                var a = localStorage.getItem('pf_accent');
+                var d = localStorage.getItem('pf_dim');
+                var t = localStorage.getItem('pf_theme');
+                var bg = localStorage.getItem('pf_bgEffect');
+                var r = document.documentElement;
+                var rv = 0, gv = 245, bv = 160; // default accent rgb
+
+                if (a) {
+                    var hex = a.replace('#', '');
+                    if (hex.length === 3) hex = hex.split('').map(function (x) { return x + x; }).join('');
+                    var n = parseInt(hex, 16);
+                    rv = (n >> 16) & 255; gv = (n >> 8) & 255; bv = n & 255;
+                    var rgb = rv + ',' + gv + ',' + bv;
+                    r.style.setProperty('--accent', a);
+                    r.style.setProperty('--accent-dim', d || a);
+                    r.style.setProperty('--accent-bg', 'rgba(' + rgb + ',.1)');
+                    r.style.setProperty('--accent-bg-md', 'rgba(' + rgb + ',.25)');
+                    r.style.setProperty('--accent-bg-xs', 'rgba(' + rgb + ',.05)');
+                    r.style.setProperty('--accent-border', 'rgba(' + rgb + ',.2)');
+                    r.style.setProperty('--accent-border-strong', 'rgba(' + rgb + ',.3)');
+                    r.style.setProperty('--accent-glow', 'rgba(' + rgb + ',.4)');
+                    r.style.setProperty('--accent-shadow', 'rgba(' + rgb + ',.1)');
+                    r.style.setProperty('--accent-shadow-lg', 'rgba(' + rgb + ',.3)');
+                }
+
+                var themes = {
+                    dark: { primary: '#0A0E27', secondary: '#1A1F3A', border: '#27273A' },
+                    black: { primary: '#000000', secondary: '#0D0D0D', border: '#1A1A1A' },
+                    navy: { primary: '#0F172A', secondary: '#1E293B', border: '#334155' },
+                    slate: { primary: '#1E1E2E', secondary: '#2A2A3E', border: '#3A3A52' },
+                    forest: { primary: '#0D1F0D', secondary: '#162616', border: '#243824' },
+                    midnight: { primary: '#0D0D1F', secondary: '#16163A', border: '#252550' },
+                    volcano: { primary: '#1A0A00', secondary: '#2D1200', border: '#3D1500' },
+                    abyss: { primary: '#020C10', secondary: '#071A24', border: '#0A2535' },
+                    obsidian: { primary: '#13111C', secondary: '#1E1B2E', border: '#2D2840' },
+                    dusk: { primary: '#1C0F22', secondary: '#2E1A38', border: '#3A1F4A' },
+                };
+                if (t && themes[t]) {
+                    r.style.setProperty('--primary', themes[t].primary);
+                    r.style.setProperty('--secondary', themes[t].secondary);
+                    r.style.setProperty('--border', themes[t].border);
+                }
+
+                // Pre-apply CSS-based background effects synchronously to prevent flash
+                // For canvas-based effects (stars, hex, rain, matrix), hide body::before so default grid doesn't show
+                if (bg === 'stars' || bg === 'hex' || bg === 'rain' || bg === 'matrix') {
+                    var style = document.createElement('style');
+                    style.id = '_preApplyBg';
+                    style.textContent = 'body::before{opacity:0 !important;animation:none !important;}';
+                    document.head.appendChild(style);
+                } else if (bg) {
+                    var rr = rv, gg = gv, bb = bv;
+                    var ga = '0.08', da = '0.15', wa1 = '0.06', wa2 = '0.04';
+                    var cssMap = {
+                        grid: 'background-image:linear-gradient(90deg,rgba(' + rr + ',' + gg + ',' + bb + ',' + ga + ') 1px,transparent 1px),linear-gradient(rgba(' + rr + ',' + gg + ',' + bb + ',' + ga + ') 1px,transparent 1px) !important;background-size:50px 50px !important;opacity:1 !important;animation:none !important;',
+                        dots: 'background-image:radial-gradient(circle,rgba(' + rr + ',' + gg + ',' + bb + ',' + da + ') 1px,transparent 1px) !important;background-size:28px 28px !important;opacity:1 !important;animation:none !important;',
+                        none: 'opacity:0 !important;animation:none !important;',
+                        circuit: 'background-image:linear-gradient(90deg,rgba(' + rr + ',' + gg + ',' + bb + ',' + ga + ') 1px,transparent 1px),linear-gradient(rgba(' + rr + ',' + gg + ',' + bb + ',' + ga + ') 1px,transparent 1px),radial-gradient(circle,rgba(' + rr + ',' + gg + ',' + bb + ',0.35) 1.5px,transparent 1.5px) !important;background-size:40px 40px,40px 40px,40px 40px !important;background-position:0 0,0 0,20px 20px !important;opacity:1 !important;',
+                        scanlines: 'background-image:repeating-linear-gradient(0deg,rgba(' + rr + ',' + gg + ',' + bb + ',0.04) 0px,rgba(' + rr + ',' + gg + ',' + bb + ',0.04) 1px,transparent 1px,transparent 4px) !important;background-size:100% 4px !important;opacity:1 !important;animation:none !important;',
+                        crosshatch: 'background-image:repeating-linear-gradient(45deg,rgba(' + rr + ',' + gg + ',' + bb + ',' + wa1 + ') 0,rgba(' + rr + ',' + gg + ',' + bb + ',' + wa1 + ') 1px,transparent 1px,transparent 14px),repeating-linear-gradient(-45deg,rgba(' + rr + ',' + gg + ',' + bb + ',' + wa1 + ') 0,rgba(' + rr + ',' + gg + ',' + bb + ',' + wa1 + ') 1px,transparent 1px,transparent 14px) !important;background-size:20px 20px !important;opacity:1 !important;',
+                        mesh: 'background-image:radial-gradient(ellipse at 20% 20%,rgba(' + rr + ',' + gg + ',' + bb + ',0.12) 0%,transparent 60%),radial-gradient(ellipse at 80% 80%,rgba(' + rr + ',' + gg + ',' + bb + ',0.08) 0%,transparent 60%) !important;background-size:100% 100% !important;opacity:1 !important;',
+                        aurora: 'background-image:radial-gradient(ellipse 80% 40% at 20% 60%,rgba(' + rr + ',' + gg + ',' + bb + ',0.14) 0%,transparent 70%),radial-gradient(ellipse 60% 50% at 80% 30%,rgba(' + rr + ',' + gg + ',' + bb + ',0.10) 0%,transparent 70%),radial-gradient(ellipse 50% 60% at 50% 80%,rgba(' + rr + ',' + gg + ',' + bb + ',0.08) 0%,transparent 60%) !important;background-size:200% 200%,200% 200%,200% 200% !important;opacity:1 !important;',
+                        plasma: 'background-image:radial-gradient(ellipse 120% 80% at 10% 90%,rgba(' + rr + ',' + gg + ',' + bb + ',0.18) 0%,transparent 50%),radial-gradient(ellipse 80% 120% at 90% 10%,rgba(' + bb + ',' + rr + ',' + gg + ',0.12) 0%,transparent 50%),radial-gradient(ellipse 60% 60% at 50% 50%,rgba(' + rr + ',' + gg + ',' + bb + ',0.08) 0%,transparent 70%) !important;background-size:100% 100% !important;opacity:1 !important;',
+                        waves: 'background-image:repeating-linear-gradient(0deg,transparent 0px,transparent 18px,rgba(' + rr + ',' + gg + ',' + bb + ',' + wa1 + ') 18px,rgba(' + rr + ',' + gg + ',' + bb + ',' + wa1 + ') 19px),repeating-linear-gradient(0deg,transparent 0px,transparent 28px,rgba(' + rr + ',' + gg + ',' + bb + ',' + wa2 + ') 28px,rgba(' + rr + ',' + gg + ',' + bb + ',' + wa2 + ') 29px) !important;background-size:100% 60px,150% 90px !important;opacity:1 !important;',
+                        noise: 'opacity:1 !important;',
+                    };
+                    var css = cssMap[bg];
+                    if (css) {
+                        var style = document.createElement('style');
+                        style.id = '_preApplyBg';
+                        style.textContent = 'body::before{' + css + '}';
+                        document.head.appendChild(style);
+                    }
+                }
+            } catch (e) { }
+            // Reveal page — settings already applied, no flash
+            document.documentElement.style.visibility = '';
+        })();
+    </script>
+</head>
+
+<body>
+    <canvas id="starsCanvas" aria-hidden="true"></canvas>
+    <canvas id="wavesCanvas" aria-hidden="true"></canvas>
+
+    <div class="cursor" id="cursor"></div>
+    <div class="cursor-dot" id="cursorDot"></div>
+
+
+    <header>
+        <div class="container">
+            <nav>
+                <div class="logo">&lt;/Jam&gt;</div>
+                <div class="nav-right">
+                    <ul class="nav-links" id="navLinks">
+                        <li><a href="#about">About</a></li>
+                        <li><a href="#projects">Projects</a></li>
+                        <li><a href="https://james-tercenio-resume.vercel.app/" id="resumeNavLink">Resume</a></li>
+                        <li><a href="#contact">Contact</a></li>
+                        <li class="nav-games-item"><button class="games-btn games-btn-mobile" id="gamesToggleMobile"><i
+                                    class="fa-solid fa-gamepad"></i>
+                                Mini Games</button></li>
+                        <li class="nav-games-item"><button class="games-btn games-btn-mobile"
+                                id="settingsToggleMobile"><i class="fa-solid fa-gear"></i> Appearance</button></li>
+                    </ul>
+                    <button class="games-btn games-btn-desktop" id="gamesToggle"><i class="fa-solid fa-gamepad"></i>
+                        Mini Games</button>
+                    <button class="settings-btn" id="settingsToggle" title="Settings"><i
+                            class="fa-solid fa-gear"></i></button>
+                    <button class="hamburger" id="hamburger" aria-label="Menu">
+                        <span></span><span></span><span></span>
+                    </button>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+
+    <section class="hero" id="hero">
+        <div class="container">
+            <span class="hero-tag">System Automation Engineer</span>
+            <h1>Building intelligent workflows<br />that scale businesses</h1>
+            <p class="hero-subtitle">Specializing in no-code/low-code automation systems, CRM development, and process
+                optimization that eliminate manual work and drive revenue.</p>
+            <a class="cta-button" href="#contact">Let's Work Together</a>
+        </div>
+    </section>
+
+
+    <section class="about" id="about">
+        <div class="container">
+            <h2 class="section-title">About</h2>
+            <div class="about-grid">
+                <div class="project-card scroll-reveal">
+                    <h3 class="project-title" style="margin-bottom:.75rem">Hi, I'm James "Jam" Tercenio.</h3>
+                    <p class="project-description">I build practical automation systems for small teams — forms, CRMs,
+                        dashboards, and file workflows — so operations run consistently without daily manual effort.</p>
+                    <p class="project-description">My work focuses on clean logic, stable integrations, and VA‑ready
+                        documentation so handoffs are clean and systems stay maintainable.</p>
+                    <div class="about-links">
+                        <a href="https://www.linkedin.com/in/james-tercenio-4b7784357/" rel="noopener"
+                            target="_blank">LinkedIn <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+                        <a href="https://github.com/jamUpstream" rel="noopener" target="_blank">GitHub <i
+                                class="fa-solid fa-arrow-up-right-from-square"></i></a>
+                        <a href="https://www.facebook.com/jamtercenio23" rel="noopener" target="_blank">Facebook <i
+                                class="fa-solid fa-arrow-up-right-from-square"></i></a>
+                    </div>
+                </div>
+                <div class="project-card scroll-reveal">
+                    <h3 class="project-title" style="margin-bottom:.75rem">What I work with</h3>
+                    <ul class="result-list">
+                        <li>Zapier / Make‑style workflow design (webhooks, routers, retries)</li>
+                        <li>Airtable bases (CRM builds, permissions, views, automations)</li>
+                        <li>Jotform forms (conditional logic, file uploads, clean data capture)</li>
+                        <li>Google Workspace (Sheets + Apps Script automation)</li>
+                        <li>Light JavaScript / HTML for custom utilities and dashboards</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <section class="skills-section" id="skills">
+        <div class="container">
+            <h2 class="section-title">Skills & Proficiency</h2>
+            <div class="skills-grid" id="skillsGrid">
+                <div class="skill-card scroll-reveal">
+                    <div class="skill-name">Zapier / Make <span class="skill-pct">92%</span></div>
+                    <div class="skill-bar">
+                        <div class="skill-fill" data-pct="92"></div>
+                    </div>
+                </div>
+                <div class="skill-card scroll-reveal">
+                    <div class="skill-name">Airtable CRM <span class="skill-pct">90%</span></div>
+                    <div class="skill-bar">
+                        <div class="skill-fill" data-pct="90"></div>
+                    </div>
+                </div>
+                <div class="skill-card scroll-reveal">
+                    <div class="skill-name">Jotform <span class="skill-pct">88%</span></div>
+                    <div class="skill-bar">
+                        <div class="skill-fill" data-pct="88"></div>
+                    </div>
+                </div>
+                <div class="skill-card scroll-reveal">
+                    <div class="skill-name">Google Apps Script <span class="skill-pct">80%</span></div>
+                    <div class="skill-bar">
+                        <div class="skill-fill" data-pct="80"></div>
+                    </div>
+                </div>
+                <div class="skill-card scroll-reveal">
+                    <div class="skill-name">GoHighLevel <span class="skill-pct">78%</span></div>
+                    <div class="skill-bar">
+                        <div class="skill-fill" data-pct="78"></div>
+                    </div>
+                </div>
+                <div class="skill-card scroll-reveal">
+                    <div class="skill-name">JavaScript / HTML <span class="skill-pct">70%</span></div>
+                    <div class="skill-bar">
+                        <div class="skill-fill" data-pct="70"></div>
+                    </div>
+                </div>
+                <div class="skill-card scroll-reveal">
+                    <div class="skill-name">SOP Documentation <span class="skill-pct">95%</span></div>
+                    <div class="skill-bar">
+                        <div class="skill-fill" data-pct="95"></div>
+                    </div>
+                </div>
+                <div class="skill-card scroll-reveal">
+                    <div class="skill-name">Webhooks & APIs <span class="skill-pct">82%</span></div>
+                    <div class="skill-bar">
+                        <div class="skill-fill" data-pct="82"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <section class="timeline-section" id="experience">
+        <div class="container">
+            <h2 class="section-title">Experience</h2>
+            <div class="timeline" style="margin-top:2rem">
+                <div class="tl-item scroll-reveal">
+                    <div class="tl-date">2025 – Present</div>
+                    <div class="tl-title">Game Developer (Indie / Side Projects)</div>
+                    <div class="tl-desc">Built browser-based games including Bark of Survival, freeworm.io, and Yatzy
+                        Royale using vanilla JavaScript and HTML5 Canvas. Deployed via Vercel.</div>
+                </div>
+                <div class="tl-item scroll-reveal">
+                    <div class="tl-date">2024 – Present</div>
+                    <div class="tl-title">Freelance System Automation Engineer</div>
+                    <div class="tl-desc">Building end-to-end automation systems and CRM solutions for real estate
+                        investors, healthcare clinics, and small businesses. Specializing in Airtable, Zapier, Jotform,
+                        and GHL.</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <section class="projects" id="projects">
+        <div class="container">
+            <h2 class="section-title">Featured Projects</h2>
+
+            <div class="category">
+                <h3 class="category-title">Automation &amp; CRM Systems</h3>
+                <div class="projects-grid">
+                    <div class="project-card fade-in-up">
+                        <div class="project-number">01</div>
+                        <h3 class="project-title">End-to-End Property Sourcing CRM &amp; Deal Distribution System</h3>
+                        <div class="project-stack">
+                            <span class="tech-tag">Airtable</span><span class="tech-tag">GoHighLevel</span><span
+                                class="tech-tag">Zapier</span><span class="tech-tag">Stripe</span><span
+                                class="tech-tag">Webhooks</span>
+                        </div>
+                        <p class="project-description"><strong>Problem:</strong> Investor data was scattered across
+                            spreadsheets, NDAs tracked manually, and deals sent inconsistently.</p>
+                        <p class="project-description"><strong>Solution:</strong> Centralized Airtable CRM with
+                            automated investor onboarding, NDA tracking, VIP tier management via Stripe, and segmented
+                            deal broadcasting through GHL.</p>
+                        <div class="project-result">
+                            <div class="result-title">Results</div>
+                            <ul class="result-list">
+                                <li>Faster deal circulation</li>
+                                <li>Reduced admin workload</li>
+                                <li>New recurring revenue from VIP subscriptions</li>
+                                <li>Clean, scalable investor management</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="project-card fade-in-up" style="animation-delay:.2s">
+                        <div class="project-number">02</div>
+                        <h3 class="project-title">Modular Zapier Architecture for Scale</h3>
+                        <div class="project-stack"><span class="tech-tag">Zapier</span><span
+                                class="tech-tag">Webhooks</span><span class="tech-tag">JavaScript</span><span
+                                class="tech-tag">Sub-Zaps</span></div>
+                        <p class="project-description"><strong>Problem:</strong> Standard Zapier setups hit looping and
+                            task limits, making systems fragile and expensive at scale.</p>
+                        <p class="project-description"><strong>Solution:</strong> Modular architecture using shared
+                            webhooks, routing logic, and sub-zaps to handle multiple workflows without duplication.</p>
+                        <div class="project-result">
+                            <div class="result-title">Results</div>
+                            <ul class="result-list">
+                                <li>Scalable automations</li>
+                                <li>Lower Zapier task usage</li>
+                                <li>Easier maintenance and expansion</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="project-card fade-in-up" style="animation-delay:.3s">
+                        <div class="project-number">03</div>
+                        <h3 class="project-title">Lightweight CRM Built in Airtable</h3>
+                        <div class="project-stack"><span class="tech-tag">Airtable</span><span
+                                class="tech-tag">Automations</span></div>
+                        <p class="project-description"><strong>Problem:</strong> Clients needed CRM functionality
+                            without the complexity of full CRM platforms.</p>
+                        <p class="project-description"><strong>Solution:</strong> Designed Airtable bases for leads,
+                            investors, and internal tracking.</p>
+                        <div class="project-result">
+                            <div class="result-title">Results</div>
+                            <ul class="result-list">
+                                <li>Simple, flexible CRM</li>
+                                <li>Lower costs</li>
+                                <li>Easier team adoption</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="project-card fade-in-up" style="animation-delay:.4s">
+                        <div class="project-number">04</div>
+                        <h3 class="project-title">Tiered Access System (VIP vs Standard Users)</h3>
+                        <div class="project-stack"><span class="tech-tag">Airtable</span><span
+                                class="tech-tag">Zapier</span><span class="tech-tag">GoHighLevel</span></div>
+                        <p class="project-description"><strong>Problem:</strong> All users received the same
+                            communications regardless of status.</p>
+                        <p class="project-description"><strong>Solution:</strong> Automated segmentation based on
+                            subscription level.</p>
+                        <div class="project-result">
+                            <div class="result-title">Results</div>
+                            <ul class="result-list">
+                                <li>Better personalization</li>
+                                <li>Increased VIP value</li>
+                                <li>Automated access control</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="category">
+                <h3 class="category-title">Forms &amp; Data Processing</h3>
+                <div class="projects-grid">
+                    <div class="project-card fade-in-up">
+                        <div class="project-number">05</div>
+                        <h3 class="project-title">Jotform → Zapier → Airtable Dynamic Forms System</h3>
+                        <div class="project-stack"><span class="tech-tag">Jotform</span><span
+                                class="tech-tag">Zapier</span><span class="tech-tag">Airtable</span></div>
+                        <p class="project-description"><strong>Problem:</strong> Static forms couldn't handle complex
+                            logic, conditional sections, or structured data capture.</p>
+                        <p class="project-description"><strong>Solution:</strong> Advanced Jotform submissions with
+                            conditional logic, hidden fields, file uploads, and webhook-based routing into Airtable.</p>
+                        <div class="project-result">
+                            <div class="result-title">Results</div>
+                            <ul class="result-list">
+                                <li>Cleaner data intake</li>
+                                <li>Reduced form errors</li>
+                                <li>Fully automated backend processing</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="project-card fade-in-up" style="animation-delay:.1s">
+                        <div class="project-number">06</div>
+                        <h3 class="project-title">Media Re-Upload Pipeline for Airtable Previews</h3>
+                        <div class="project-stack"><span class="tech-tag">Jotform</span><span
+                                class="tech-tag">Zapier</span><span class="tech-tag">Airtable</span></div>
+                        <p class="project-description"><strong>Problem:</strong> Uploaded videos couldn't be previewed
+                            inside Airtable due to external file hosting.</p>
+                        <p class="project-description"><strong>Solution:</strong> Download-and-reupload automation so
+                            media files are reattached directly to Airtable.</p>
+                        <div class="project-result">
+                            <div class="result-title">Results</div>
+                            <ul class="result-list">
+                                <li>Native Airtable previews enabled</li>
+                                <li>Better internal review workflows</li>
+                                <li>Improved UX for non-technical teams</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="category">
+                <h3 class="category-title">Google Apps Script Projects</h3>
+                <div class="projects-grid">
+                    <div class="project-card fade-in-up">
+                        <div class="project-number">07</div>
+                        <h3 class="project-title">Monthly Date Auto-Update Script</h3>
+                        <div class="project-stack"><span class="tech-tag">Google Apps Script</span><span
+                                class="tech-tag">Google Sheets</span></div>
+                        <p class="project-description"><strong>Problem:</strong> Manual monthly date updates caused
+                            reporting errors and inconsistencies.</p>
+                        <p class="project-description"><strong>Solution:</strong> Time-driven Apps Script that
+                            automatically sets cells to the previous month's first day.</p>
+                        <div class="project-result">
+                            <div class="result-title">Results</div>
+                            <ul class="result-list">
+                                <li>Zero manual updates</li>
+                                <li>Accurate monthly reporting</li>
+                                <li>Fully automated date rollovers</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="project-card fade-in-up" style="animation-delay:.1s">
+                        <div class="project-number">08</div>
+                        <h3 class="project-title">Automation Control Panel in Google Sheets</h3>
+                        <div class="project-stack"><span class="tech-tag">Google Sheets</span><span
+                                class="tech-tag">Apps Script</span></div>
+                        <p class="project-description"><strong>Problem:</strong> Non-technical users couldn't safely
+                            enable/disable automations.</p>
+                        <p class="project-description"><strong>Solution:</strong> Toggle-based controls in Sheets that
+                            drive automation logic without touching Zapier or scripts.</p>
+                        <div class="project-result">
+                            <div class="result-title">Results</div>
+                            <ul class="result-list">
+                                <li>Safer automation control</li>
+                                <li>Reduced accidental failures</li>
+                                <li>Improved team autonomy</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="project-card fade-in-up" style="animation-delay:.2s">
+                        <div class="project-number">09</div>
+                        <h3 class="project-title">Scheduled Data Reset &amp; Roll-Forward System</h3>
+                        <div class="project-stack"><span class="tech-tag">Google Sheets</span><span
+                                class="tech-tag">Apps Script</span></div>
+                        <p class="project-description"><strong>Problem:</strong> Operational data needed monthly resets
+                            without losing historical records.</p>
+                        <p class="project-description"><strong>Solution:</strong> Automated clearing, archiving, and
+                            roll-forward logic using scheduled scripts.</p>
+                        <div class="project-result">
+                            <div class="result-title">Results</div>
+                            <ul class="result-list">
+                                <li>Clean monthly datasets</li>
+                                <li>Preserved historical data</li>
+                                <li>No manual cleanup required</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="category">
+                <h3 class="category-title">SOP &amp; VA Operations</h3>
+                <div class="projects-grid">
+                    <div class="project-card fade-in-up">
+                        <div class="project-number">10</div>
+                        <h3 class="project-title">VA-Ready SOP Library for Automation Systems</h3>
+                        <div class="project-stack"><span class="tech-tag">SOP Documentation</span><span
+                                class="tech-tag">Zapier</span><span class="tech-tag">Airtable</span></div>
+                        <p class="project-description"><strong>Problem:</strong> Processes broke when team members
+                            changed or knowledge wasn't documented.</p>
+                        <p class="project-description"><strong>Solution:</strong> Step-by-step SOPs with screenshots,
+                            time estimates, and edge cases for non-technical VAs.</p>
+                        <div class="project-result">
+                            <div class="result-title">Results</div>
+                            <ul class="result-list">
+                                <li>Faster VA onboarding</li>
+                                <li>Consistent execution</li>
+                                <li>Systems became transferable assets</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="project-card fade-in-up" style="animation-delay:.1s">
+                        <div class="project-number">11</div>
+                        <h3 class="project-title">Jotform Onboarding SOP for Healthcare Clinics</h3>
+                        <div class="project-stack"><span class="tech-tag">Jotform</span><span
+                                class="tech-tag">Zapier</span></div>
+                        <p class="project-description"><strong>Problem:</strong> Clinic onboarding forms were
+                            inconsistent and hard to maintain.</p>
+                        <p class="project-description"><strong>Solution:</strong> SOPs covering branding, conditional
+                            logic, webhooks, and submission testing.</p>
+                        <div class="project-result">
+                            <div class="result-title">Results</div>
+                            <ul class="result-list">
+                                <li>Standardized onboarding</li>
+                                <li>Reduced setup errors</li>
+                                <li>Faster clinic deployments</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="category">
+                <h3 class="category-title">File &amp; Asset Automation</h3>
+                <div class="projects-grid">
+                    <div class="project-card fade-in-up">
+                        <div class="project-number">12</div>
+                        <h3 class="project-title">Automated Asset Packaging &amp; Delivery System</h3>
+                        <div class="project-stack"><span class="tech-tag">Google Sheets</span><span
+                                class="tech-tag">JavaScript</span></div>
+                        <p class="project-description"><strong>Problem:</strong> Manually packaging and emailing assets
+                            was slow and error-prone.</p>
+                        <p class="project-description"><strong>Solution:</strong> Automated zipping of dynamically named
+                            assets and email delivery.</p>
+                        <div class="project-result">
+                            <div class="result-title">Results</div>
+                            <ul class="result-list">
+                                <li>Faster delivery</li>
+                                <li>Zero manual packaging</li>
+                                <li>Consistent file naming</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="category">
+                <h3 class="category-title">Game Development Projects</h3>
+                <div class="projects-grid">
+                    <div class="project-card fade-in-up">
+                        <div class="project-number">13</div>
+                        <h3 class="project-title">Bark of Survival v1</h3>
+                        <div class="project-stack"><span class="tech-tag">HTML5 Canvas</span><span
+                                class="tech-tag">JavaScript</span></div>
+                        <p class="project-description">Wave-based survival browser game with upgrades, bosses, and
+                            dynamic audio states.</p>
+                        <a class="cta-button" href="https://bark-of-survival-v1.vercel.app/"
+                            style="margin-top:1rem;display:inline-block" target="_blank">Open Game <i
+                                class="fa-solid fa-arrow-up-right-from-square"></i></a>
+                    </div>
+                    <div class="project-card fade-in-up">
+                        <div class="project-number">14</div>
+                        <h3 class="project-title">Bark of Survival v2</h3>
+                        <div class="project-stack"><span class="tech-tag">HTML5 Canvas</span><span
+                                class="tech-tag">JavaScript</span></div>
+                        <p class="project-description">Wave-based survival browser game with upgrades, bosses, and
+                            dynamic audio states.</p>
+                        <a class="cta-button" href="https://bark-of-survival-v2.vercel.app/"
+                            style="margin-top:1rem;display:inline-block" target="_blank">Open Game <i
+                                class="fa-solid fa-arrow-up-right-from-square"></i></a>
+                    </div>
+                    <div class="project-card fade-in-up" style="animation-delay:.1s">
+                        <div class="project-number">15</div>
+                        <h3 class="project-title">freeworm.io</h3>
+                        <div class="project-stack"><span class="tech-tag">JavaScript</span><span class="tech-tag">Game
+                                Logic</span></div>
+                        <p class="project-description">Real-time worm-style browser game featuring movement physics,
+                            collision handling, and scalable arenas.</p>
+                        <a class="cta-button" href="https://freeworm-io.vercel.app/"
+                            style="margin-top:1rem;display:inline-block" target="_blank">Open Game <i
+                                class="fa-solid fa-arrow-up-right-from-square"></i></a>
+                    </div>
+                    <div class="project-card fade-in-up" style="animation-delay:.2s">
+                        <div class="project-number">16</div>
+                        <h3 class="project-title">Yatzy</h3>
+                        <div class="project-stack"><span class="tech-tag">JavaScript</span><span class="tech-tag">Game
+                                Logic</span></div>
+                        <p class="project-description">Digital Yatzy dice game implementing classic rules, score
+                            validation, and turn-based gameplay.</p>
+                        <a class="cta-button" href="https://yatzy-royale.vercel.app/"
+                            style="margin-top:1rem;display:inline-block" target="_blank">Open Game <i
+                                class="fa-solid fa-arrow-up-right-from-square"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <section class="contact" id="contact">
+        <div class="container">
+            <div class="contact-content">
+                <h2 class="section-title">Let's Build Something</h2>
+                <p class="contact-intro">Have a project in mind? Let's discuss how automation can transform your
+                    business operations.</p>
+                <form action="https://formspree.io/f/mykdykre" class="contact-form" method="POST">
+                    <div class="form-group">
+                        <label for="name">Name</label>
+                        <input id="name" name="name" required type="text" />
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input id="email" name="email" required type="email" />
+                    </div>
+                    <div class="form-group">
+                        <label for="message">Message</label>
+                        <textarea id="message" name="message" required></textarea>
+                    </div>
+                    <button class="submit-button" type="submit">Send Message</button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <button class="back-to-top" id="backToTop" aria-label="Back to top"><i class="fa-solid fa-arrow-up"></i></button>
+
+    <footer>
+        <div class="container">
+            <p class="footer-text">© 2026 James Tercenio — Built with precision.</p>
+        </div>
+    </footer>
+
+
+    <div class="settings-overlay" id="settingsOverlay">
+        <div class="settings-backdrop" id="settingsBackdrop"></div>
+        <div class="settings-panel" id="settingsPanel">
+            <div class="settings-header">
+                <h4><i class="fa-solid fa-gear"></i> Appearance</h4>
+                <button class="settings-close" id="settingsClose"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="settings-body">
+
+
+                <div class="settings-group">
+                    <label>Accent Color</label>
+                    <div class="color-swatches" id="colorSwatches">
+                        <div class="swatch active" data-accent="#00F5A0" data-dim="#00C97F" style="background:#00F5A0"
+                            title="Mint Green"></div>
+                        <div class="swatch" data-accent="#38BDF8" data-dim="#0EA5E9" style="background:#38BDF8"
+                            title="Sky Blue"></div>
+                        <div class="swatch" data-accent="#A78BFA" data-dim="#7C3AED" style="background:#A78BFA"
+                            title="Violet"></div>
+                        <div class="swatch" data-accent="#FB7185" data-dim="#E11D48" style="background:#FB7185"
+                            title="Rose"></div>
+                        <div class="swatch" data-accent="#FBBF24" data-dim="#D97706" style="background:#FBBF24"
+                            title="Amber"></div>
+                        <div class="swatch" data-accent="#F97316" data-dim="#EA580C" style="background:#F97316"
+                            title="Orange"></div>
+                        <div class="swatch" data-accent="#34D399" data-dim="#059669" style="background:#34D399"
+                            title="Emerald"></div>
+                        <div class="swatch" data-accent="#E879F9" data-dim="#C026D3" style="background:#E879F9"
+                            title="Fuchsia"></div>
+                        <div class="swatch" data-accent="#F43F5E" data-dim="#BE123C" style="background:#F43F5E"
+                            title="Red"></div>
+                        <div class="swatch" data-accent="#06B6D4" data-dim="#0891B2" style="background:#06B6D4"
+                            title="Cyan"></div>
+                    </div>
+                    <div class="custom-color-row">
+                        <input type="color" id="customAccent" value="#00F5A0" title="Custom color" />
+                        <span>Custom color</span>
+                    </div>
+                </div>
+
+
+                <div class="settings-group">
+                    <label>Background Theme</label>
+                    <div class="theme-options" style="flex-wrap:wrap;gap:.4rem">
+                        <button class="theme-opt active" data-theme="dark">
+                            <div class="theme-dot" style="background:#0A0E27;border:1px solid #444"></div>Dark
+                        </button>
+                        <button class="theme-opt" data-theme="black">
+                            <div class="theme-dot" style="background:#000;border:1px solid #333"></div>Black
+                        </button>
+                        <button class="theme-opt" data-theme="navy">
+                            <div class="theme-dot" style="background:#0F172A;border:1px solid #1E3A5F"></div>Navy
+                        </button>
+                        <button class="theme-opt" data-theme="slate">
+                            <div class="theme-dot" style="background:#1E1E2E;border:1px solid #444"></div>Slate
+                        </button>
+                        <button class="theme-opt" data-theme="forest">
+                            <div class="theme-dot" style="background:#0D1F0D;border:1px solid #1A3A1A"></div>Forest
+                        </button>
+                        <button class="theme-opt" data-theme="midnight">
+                            <div class="theme-dot" style="background:#0D0D1F;border:1px solid #252550"></div>Midnight
+                        </button>
+                        <button class="theme-opt" data-theme="volcano">
+                            <div class="theme-dot" style="background:#1A0A00;border:1px solid #3D1500"></div>Volcano
+                        </button>
+                        <button class="theme-opt" data-theme="abyss">
+                            <div class="theme-dot" style="background:#020C10;border:1px solid #0A2535"></div>Abyss
+                        </button>
+                        <button class="theme-opt" data-theme="obsidian">
+                            <div class="theme-dot" style="background:#13111C;border:1px solid #2D2840"></div>Obsidian
+                        </button>
+                        <button class="theme-opt" data-theme="dusk">
+                            <div class="theme-dot" style="background:#1C0F22;border:1px solid #3A1F4A"></div>Dusk
+                        </button>
+                    </div>
+                </div>
+
+
+                <div class="settings-group">
+                    <label>Background Effect</label>
+                    <div class="theme-options" style="flex-wrap:wrap;gap:.4rem">
+                        <button class="theme-opt active" data-bg="grid">
+                            <div class="theme-dot"
+                                style="background:repeating-linear-gradient(0deg,#1a1f3a 0,#1a1f3a 1px,transparent 1px,transparent 10px),repeating-linear-gradient(90deg,#1a1f3a 0,#1a1f3a 1px,transparent 1px,transparent 10px);border:1px solid #444">
+                            </div>Grid
+                        </button>
+                        <button class="theme-opt" data-bg="dots">
+                            <div class="theme-dot"
+                                style="background:radial-gradient(circle,#555 1px,transparent 1px);background-size:6px 6px;border:1px solid #444">
+                            </div>Dots
+                        </button>
+                        <button class="theme-opt" data-bg="waves">
+                            <div class="theme-dot"
+                                style="background:linear-gradient(45deg,#1a1f3a 25%,transparent 25%,transparent 75%,#1a1f3a 75%);background-size:6px 6px;border:1px solid #444">
+                            </div>Waves
+                        </button>
+                        <button class="theme-opt" data-bg="none">
+                            <div class="theme-dot" style="background:#111;border:1px solid #333"></div>None
+                        </button>
+                        <button class="theme-opt" data-bg="circuit">
+                            <div class="theme-dot"
+                                style="background:linear-gradient(90deg,#1a1f3a 2px,transparent 2px),linear-gradient(#1a1f3a 2px,transparent 2px);background-size:12px 12px;border:1px solid #444">
+                            </div>Circuit
+                        </button>
+                        <button class="theme-opt" data-bg="hex">
+                            <div class="theme-dot"
+                                style="background:radial-gradient(circle at 50% 50%,#333 2px,transparent 2px);background-size:10px 10px;border:1px solid #444">
+                            </div>Hexagon
+                        </button>
+                        <button class="theme-opt" data-bg="scanlines">
+                            <div class="theme-dot"
+                                style="background:repeating-linear-gradient(0deg,#222 0,#222 1px,transparent 1px,transparent 4px);border:1px solid #444">
+                            </div>Scanlines
+                        </button>
+                        <button class="theme-opt" data-bg="crosshatch">
+                            <div class="theme-dot"
+                                style="background:repeating-linear-gradient(45deg,#333 0,#333 1px,transparent 1px,transparent 7px),repeating-linear-gradient(-45deg,#333 0,#333 1px,transparent 1px,transparent 7px);border:1px solid #444">
+                            </div>Crosshatch
+                        </button>
+                        <button class="theme-opt" data-bg="stars">
+                            <div class="theme-dot"
+                                style="background:radial-gradient(circle,#aaa 1px,transparent 1px);background-size:8px 8px;border:1px solid #444">
+                            </div>Stars
+                        </button>
+                        <button class="theme-opt" data-bg="mesh">
+                            <div class="theme-dot"
+                                style="background:radial-gradient(ellipse at 20% 20%,#2a2f50 0,transparent 50%),radial-gradient(ellipse at 80% 80%,#0d1520 0,transparent 50%);border:1px solid #444">
+                            </div>Mesh
+                        </button>
+                        <button class="theme-opt" data-bg="aurora">
+                            <div class="theme-dot"
+                                style="background:linear-gradient(135deg,#001a0f 0%,#0a1a2e 50%,#1a0a2e 100%);border:1px solid #444">
+                            </div>Aurora
+                        </button>
+                        <button class="theme-opt" data-bg="rain">
+                            <div class="theme-dot"
+                                style="background:repeating-linear-gradient(90deg,transparent 0,transparent 3px,#1a2a3a 3px,#1a2a3a 4px);border:1px solid #444">
+                            </div>Rain
+                        </button>
+                        <button class="theme-opt" data-bg="plasma">
+                            <div class="theme-dot"
+                                style="background:radial-gradient(circle at 30% 70%,#2a0a3a 0%,transparent 60%),radial-gradient(circle at 70% 30%,#0a2a1a 0%,transparent 60%);border:1px solid #444">
+                            </div>Plasma
+                        </button>
+                        <button class="theme-opt" data-bg="matrix">
+                            <div class="theme-dot"
+                                style="background:repeating-linear-gradient(90deg,transparent 0,transparent 9px,#0a2a0a 9px,#0a2a0a 10px);border:1px solid #444">
+                            </div>Matrix
+                        </button>
+                        <button class="theme-opt" data-bg="noise">
+                            <div class="theme-dot"
+                                style="background:#1a1a2e;border:1px solid #444;filter:contrast(1.2)">
+                            </div>Noise
+                        </button>
+                    </div>
+                </div>
+
+
+                <div class="settings-group" style="display:none" id="gridToggleGroup">
+                    <div class="toggle-row">
+                        <span class="toggle-label">Background Grid</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="gridToggle" checked />
+                            <div class="toggle-track"></div>
+                        </label>
+                    </div>
+                </div>
+
+
+                <button class="settings-reset" id="settingsReset"><i class="fa-solid fa-rotate-left"></i> Reset to
+                    Default</button>
+            </div>
+        </div>
+    </div>
+    <div class="games-overlay" id="gamesOverlay">
+        <div class="games-panel">
+            <div class="games-header">
+                <h3><i class="fa-solid fa-gamepad"></i> Mini Games</h3>
+                <button class="games-close" id="gamesClose"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="games-tabs">
+                <button class="game-tab active" data-tab="reaction"><i class="fa-solid fa-bolt"></i> Reaction</button>
+                <button class="game-tab" data-tab="typing"><i class="fa-solid fa-keyboard"></i> Typing</button>
+                <button class="game-tab" data-tab="aim"><i class="fa-solid fa-crosshairs"></i> Aim</button>
+            </div>
+            <div class="games-body">
+
+
+                <div class="game-content active" id="tab-reaction">
+                    <p style="font-size:.88rem;color:var(--text-dim);margin-bottom:1rem">Click the box when it turns
+                        <span style="color:var(--accent)">green</span>. How fast are you?
+                    </p>
+                    <div class="reaction-area" id="reactionArea">
+                        <div class="reaction-msg" id="reactionMsg">Click to Start</div>
+                        <div class="reaction-sub" id="reactionSub">Test your reaction time</div>
+                    </div>
+                    <div class="reaction-scores">
+                        <h4>Session Scores</h4>
+                        <div class="score-list" id="reactionScoreList"></div>
+                    </div>
+                </div>
+
+
+                <div class="game-content" id="tab-typing">
+                    <p style="font-size:.88rem;color:var(--text-dim);margin-bottom:.75rem">Type the text below as fast
+                        and accurately as you can.</p>
+                    <div class="typing-target" id="typingTarget"><span
+                            style="color:var(--text-dim);font-size:.9rem">Press "Start Test" to begin…</span></div>
+                    <textarea id="typingInput" placeholder="Start typing here..." disabled spellcheck="false"
+                        autocomplete="off" autocorrect="off" autocapitalize="off"></textarea>
+                    <div class="typing-stats">
+                        <div class="typing-stat"><span class="typing-stat-val" id="wpmVal">0</span><span
+                                class="typing-stat-label">WPM</span></div>
+                        <div class="typing-stat"><span class="typing-stat-val" id="accVal">100</span><span
+                                class="typing-stat-label">% Accuracy</span></div>
+                        <div class="typing-stat"><span class="typing-stat-val" id="timeVal">60</span><span
+                                class="typing-stat-label">Seconds Left</span></div>
+                    </div>
+                    <button class="game-btn" id="startTyping">Start Test</button>
+                </div>
+
+
+                <div class="game-content" id="tab-aim">
+                    <p style="font-size:.88rem;color:var(--text-dim);margin-bottom:.75rem">Click the targets before they
+                        disappear! 30 seconds.</p>
+                    <div class="aim-wrapper">
+                        <canvas id="aimCanvas"></canvas>
+                    </div>
+                    <div class="aim-stats">
+                        <div class="typing-stat"><span class="typing-stat-val" id="aimHits">0</span><span
+                                class="typing-stat-label">Hits</span></div>
+                        <div class="typing-stat"><span class="typing-stat-val" id="aimMisses">0</span><span
+                                class="typing-stat-label">Misses</span></div>
+                        <div class="typing-stat"><span class="typing-stat-val" id="aimTime">30</span><span
+                                class="typing-stat-label">Seconds Left</span></div>
+                        <div class="typing-stat"><span class="typing-stat-val" id="aimAcc">–</span><span
+                                class="typing-stat-label">Accuracy</span></div>
+                    </div>
+                    <button class="game-btn" id="startAim">Start</button>
+                    <button class="game-btn" id="resetAim"
+                        style="margin-left:.5rem;background:rgba(255,80,80,.1);border-color:rgba(255,80,80,.3);color:#ff6b6b;display:none">Reset</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+
+    <script src="main.js"></script>
+</body>
+
+</html>
