@@ -694,18 +694,7 @@ function applyBgEffect(type, rgb) {
                 }`,
         waves: `body::before { opacity: 0 !important; animation: none !important; }`,
         none: `body::before { opacity: 0 !important; animation: none !important; }`,
-        circuit: `
-                @keyframes circuitPulse { 0%{opacity:.6} 50%{opacity:1} 100%{opacity:.6} }
-                body::before {
-                    background-image:
-                        linear-gradient(90deg, rgba(${r},${g},${b},${ga}) 1px, transparent 1px),
-                        linear-gradient(rgba(${r},${g},${b},${ga}) 1px, transparent 1px),
-                        radial-gradient(circle, rgba(${r},${g},${b},0.35) 1.5px, transparent 1.5px) !important;
-                    background-size: 40px 40px, 40px 40px, 40px 40px !important;
-                    background-position: 0 0, 0 0, 20px 20px !important;
-                    opacity: 1 !important;
-                    animation: circuitPulse 4s ease-in-out infinite !important;
-                }`,
+        circuit: `body::before { opacity: 0 !important; animation: none !important; }`,
         hex: (() => {
             const svgA = encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="50" height="87"><polygon points="25,2 48,14.5 48,39.5 25,52 2,39.5 2,14.5" fill="none" stroke="rgba(${r},${g},${b},0.3)" stroke-width="1.2"/></svg>`);
             const svgB = encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="50" height="87"><polygon points="25,2 48,14.5 48,39.5 25,52 2,39.5 2,14.5" fill="none" stroke="rgba(${r},${g},${b},0.12)" stroke-width="1"/></svg>`);
@@ -827,14 +816,16 @@ function applyBgEffect(type, rgb) {
     }
 
 
-    // ── Canvas-based effects: Matrix, Rain & Hex ──
+    // ── Canvas-based effects: Matrix, Rain, Hex & Circuit ──
     let matrixCanvas = document.getElementById('matrix-canvas');
     let rainCanvas = document.getElementById('rain-canvas');
     let hexCanvas = document.getElementById('hex-canvas');
+    let circuitCanvas = document.getElementById('circuit-canvas');
 
     if (type === 'matrix') {
         if (rainCanvas) { rainCanvas.style.display = 'none'; stopRainCanvas(); }
         if (hexCanvas) { hexCanvas.style.display = 'none'; stopHexCanvas(); }
+        if (circuitCanvas) { circuitCanvas.style.display = 'none'; stopCircuitCanvas(); }
         if (!matrixCanvas) {
             matrixCanvas = document.createElement('canvas');
             matrixCanvas.id = 'matrix-canvas';
@@ -846,6 +837,7 @@ function applyBgEffect(type, rgb) {
     } else if (type === 'rain') {
         if (matrixCanvas) { matrixCanvas.style.display = 'none'; stopMatrixCanvas(); }
         if (hexCanvas) { hexCanvas.style.display = 'none'; stopHexCanvas(); }
+        if (circuitCanvas) { circuitCanvas.style.display = 'none'; stopCircuitCanvas(); }
         if (!rainCanvas) {
             rainCanvas = document.createElement('canvas');
             rainCanvas.id = 'rain-canvas';
@@ -857,6 +849,7 @@ function applyBgEffect(type, rgb) {
     } else if (type === 'hex') {
         if (matrixCanvas) { matrixCanvas.style.display = 'none'; stopMatrixCanvas(); }
         if (rainCanvas) { rainCanvas.style.display = 'none'; stopRainCanvas(); }
+        if (circuitCanvas) { circuitCanvas.style.display = 'none'; stopCircuitCanvas(); }
         if (!hexCanvas) {
             hexCanvas = document.createElement('canvas');
             hexCanvas.id = 'hex-canvas';
@@ -865,10 +858,23 @@ function applyBgEffect(type, rgb) {
         }
         hexCanvas.style.display = 'block';
         startHexCanvas(hexCanvas, rgb);
+    } else if (type === 'circuit') {
+        if (matrixCanvas) { matrixCanvas.style.display = 'none'; stopMatrixCanvas(); }
+        if (rainCanvas) { rainCanvas.style.display = 'none'; stopRainCanvas(); }
+        if (hexCanvas) { hexCanvas.style.display = 'none'; stopHexCanvas(); }
+        if (!circuitCanvas) {
+            circuitCanvas = document.createElement('canvas');
+            circuitCanvas.id = 'circuit-canvas';
+            circuitCanvas.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;';
+            document.body.prepend(circuitCanvas);
+        }
+        circuitCanvas.style.display = 'block';
+        startCircuitCanvas(circuitCanvas, rgb);
     } else {
         if (matrixCanvas) { matrixCanvas.style.display = 'none'; stopMatrixCanvas(); }
         if (rainCanvas) { rainCanvas.style.display = 'none'; stopRainCanvas(); }
         if (hexCanvas) { hexCanvas.style.display = 'none'; stopHexCanvas(); }
+        if (circuitCanvas) { circuitCanvas.style.display = 'none'; stopCircuitCanvas(); }
     }
 
     // Re-pin depth layer after canvases whenever bg effect changes
@@ -1158,7 +1164,167 @@ function startHexCanvas(canvas, rgb) {
     _hexRaf = requestAnimationFrame(draw);
 }
 
-// Get current accent rgb for initial bg effect
+// ── Circuit Board Canvas Animation ──
+let _circuitRaf = null;
+function stopCircuitCanvas() {
+    if (_circuitRaf) { cancelAnimationFrame(_circuitRaf); _circuitRaf = null; }
+}
+function startCircuitCanvas(canvas, rgb) {
+    stopCircuitCanvas();
+    const ctx = canvas.getContext('2d');
+    let W, H, nodes, traces, pulses;
+    const GRID = 48; // grid cell size
+
+    function resize() {
+        W = canvas.width = window.innerWidth;
+        H = canvas.height = window.innerHeight;
+        buildCircuit();
+    }
+
+    function buildCircuit() {
+        nodes = [];
+        traces = [];
+        pulses = [];
+
+        const cols = Math.ceil(W / GRID) + 1;
+        const rows = Math.ceil(H / GRID) + 1;
+
+        // Create grid nodes with random presence (~55% occupied)
+        const grid = {};
+        for (let c = 0; c <= cols; c++) {
+            for (let rr = 0; rr <= rows; rr++) {
+                if (Math.random() < 0.55) {
+                    const key = `${c},${rr}`;
+                    const node = {
+                        x: c * GRID,
+                        y: rr * GRID,
+                        c, r: rr,
+                        // node type: 0=junction dot, 1=via (circle), 2=component pad
+                        type: Math.random() < 0.12 ? 1 : Math.random() < 0.06 ? 2 : 0,
+                        glow: Math.random(),
+                        glowSpeed: 0.005 + Math.random() * 0.012
+                    };
+                    nodes.push(node);
+                    grid[key] = node;
+                }
+            }
+        }
+
+        // Connect adjacent nodes with traces (horizontal + vertical + some L-bends)
+        const dirs = [[1,0],[0,1]];
+        for (const node of nodes) {
+            for (const [dc, dr] of dirs) {
+                const neighbor = grid[`${node.c+dc},${node.r+dr}`];
+                if (!neighbor) continue;
+                // ~65% chance to draw a trace between adjacent nodes
+                if (Math.random() < 0.65) {
+                    traces.push({
+                        x1: node.x, y1: node.y,
+                        x2: neighbor.x, y2: neighbor.y,
+                        // Each trace gets a base opacity
+                        alpha: 0.06 + Math.random() * 0.10,
+                    });
+                    // Spawn a pulse on some traces
+                    if (Math.random() < 0.08) {
+                        pulses.push({
+                            x1: node.x, y1: node.y,
+                            x2: neighbor.x, y2: neighbor.y,
+                            t: Math.random(),           // 0..1 progress along trace
+                            speed: 0.004 + Math.random() * 0.008,
+                            dir: Math.random() < 0.5 ? 1 : -1,
+                            size: 2.5 + Math.random() * 2,
+                            trail: 0.18 + Math.random() * 0.14,
+                        });
+                    }
+                }
+            }
+        }
+    }
+
+    resize();
+    window.addEventListener('resize', resize);
+
+    let _lastTime = 0;
+    function draw(ts) {
+        _circuitRaf = requestAnimationFrame(draw);
+        if (ts - _lastTime < 33) return; // ~30fps cap
+        _lastTime = ts;
+
+        // Read current accent each frame
+        const aHex = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#00F5A0';
+        const aRgb = hexToRgb(aHex);
+        const [ar, ag, ab] = aRgb.split(',').map(Number);
+
+        ctx.clearRect(0, 0, W, H);
+
+        // ── Draw traces ──
+        for (const tr of traces) {
+            ctx.beginPath();
+            ctx.moveTo(tr.x1, tr.y1);
+            ctx.lineTo(tr.x2, tr.y2);
+            ctx.strokeStyle = `rgba(${ar},${ag},${ab},${tr.alpha})`;
+            ctx.lineWidth = 1;
+            ctx.stroke();
+        }
+
+        // ── Draw nodes ──
+        for (const nd of nodes) {
+            nd.glow += nd.glowSpeed;
+            const a = 0.12 + Math.abs(Math.sin(nd.glow)) * 0.18;
+            if (nd.type === 1) {
+                // Via: filled circle with ring
+                ctx.beginPath();
+                ctx.arc(nd.x, nd.y, 3.5, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(${ar},${ag},${ab},${(a * 0.7).toFixed(3)})`;
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(nd.x, nd.y, 5.5, 0, Math.PI * 2);
+                ctx.strokeStyle = `rgba(${ar},${ag},${ab},${(a * 0.5).toFixed(3)})`;
+                ctx.lineWidth = 0.8;
+                ctx.stroke();
+            } else if (nd.type === 2) {
+                // Component pad: small square
+                const s = 4;
+                ctx.fillStyle = `rgba(${ar},${ag},${ab},${(a * 0.6).toFixed(3)})`;
+                ctx.fillRect(nd.x - s/2, nd.y - s/2, s, s);
+            } else {
+                // Junction dot
+                ctx.beginPath();
+                ctx.arc(nd.x, nd.y, 1.8, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(${ar},${ag},${ab},${a.toFixed(3)})`;
+                ctx.fill();
+            }
+        }
+
+        // ── Draw & advance pulses ──
+        for (const p of pulses) {
+            p.t += p.speed * p.dir;
+            if (p.t > 1 || p.t < 0) {
+                p.dir *= -1;
+                p.t = p.t > 1 ? 1 : 0;
+            }
+            const px = p.x1 + (p.x2 - p.x1) * p.t;
+            const py = p.y1 + (p.y2 - p.y1) * p.t;
+
+            // Glowing head
+            const grd = ctx.createRadialGradient(px, py, 0, px, py, p.size * 3);
+            grd.addColorStop(0, `rgba(${ar},${ag},${ab},0.9)`);
+            grd.addColorStop(0.3, `rgba(${ar},${ag},${ab},${p.trail})`);
+            grd.addColorStop(1, `rgba(${ar},${ag},${ab},0)`);
+            ctx.beginPath();
+            ctx.arc(px, py, p.size * 3, 0, Math.PI * 2);
+            ctx.fillStyle = grd;
+            ctx.fill();
+
+            // Bright core dot
+            ctx.beginPath();
+            ctx.arc(px, py, p.size * 0.6, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(${ar},${ag},${ab},1)`;
+            ctx.fill();
+        }
+    }
+    _circuitRaf = requestAnimationFrame(draw);
+}
 const defaultRgb = '0,245,160';
 
 // --- Glass depth layer (makes backdrop-filter visually obvious) ---
