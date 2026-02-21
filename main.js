@@ -1167,16 +1167,15 @@ function ensureGlassDepthLayer(style) {
             layer.id = id;
             // Must be very early in DOM to sit behind everything else
             document.body.insertBefore(layer, document.body.firstChild);
-        } else {
-            // Ensure it stays at the top of <body>
-            if (layer !== document.body.firstChild) {
-                document.body.insertBefore(layer, document.body.firstChild);
-            }
+        } else if (layer !== document.body.firstChild) {
+            // Keep it pinned to position 0 — canvases prepend themselves and would cover it
+            document.body.insertBefore(layer, document.body.firstChild);
         }
-        // Update the depth layer with current accent colors - so it follows theme changes
+        // Update with current accent colors and make visible
         updateGlassDepthLayer();
     } else {
-        if (layer) layer.remove();
+        // Hide but keep in DOM — avoids re-insert position bugs when toggling back to glass
+        if (layer) layer.style.cssText = 'display:none';
     }
 }
 
@@ -1323,12 +1322,12 @@ document.getElementById('settingsReset').addEventListener('click', () => {
         const dim = loadSetting('dim');
         const theme = loadSetting('theme');
         const bgEffect = loadSetting('bgEffect');
-        const visual = loadSetting('visual');
+        const visual = loadSetting('visual') || 'default'; // always send so resume can turn glass OFF
         if (accent) params.set('accent', accent);
         if (dim) params.set('dim', dim);
         if (theme) params.set('theme', theme);
         if (bgEffect) params.set('bg', bgEffect);
-        if (visual && visual !== 'default') params.set('visual', visual);
+        params.set('visual', visual); // always include
         const qs = params.toString();
         resumeLink.href = qs ? BASE + '?' + qs : BASE;
     }
