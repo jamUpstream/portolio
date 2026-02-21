@@ -23,20 +23,25 @@
                 var dim = params.get('dim');
                 var theme = params.get('theme');
                 var bgEffect = params.get('bg');
+                var visual = params.get('visual');
 
                 if (accent) { localStorage.setItem('pf_accent', accent); localStorage.setItem('pf_dim', dim || accent); }
                 if (theme) localStorage.setItem('pf_theme', theme);
                 if (bgEffect) localStorage.setItem('pf_bgEffect', bgEffect);
+                if (visual) localStorage.setItem('pf_visual', visual);
 
                 // Handle reset signal from other site
                 if (params.get('reset') === '1') {
-                    ['pf_accent', 'pf_dim', 'pf_theme', 'pf_bgEffect'].forEach(function (k) { try { localStorage.removeItem(k); } catch (e) { } });
+                    ['pf_accent', 'pf_dim', 'pf_theme', 'pf_bgEffect', 'pf_visual'].forEach(function (k) { try { localStorage.removeItem(k); } catch (e) { } });
                     history.replaceState(null, '', window.location.pathname);
                     document.documentElement.style.visibility = '';
                     return; // use defaults, don't apply any saved theme
                 }
 
-                if (accent || theme || bgEffect) history.replaceState(null, '', window.location.pathname);
+                var visual = params.get('visual');
+                if (visual) localStorage.setItem('pf_visual', visual);
+
+                if (accent || theme || bgEffect || visual) history.replaceState(null, '', window.location.pathname);
 
                 var a = localStorage.getItem('pf_accent');
                 var d = localStorage.getItem('pf_dim');
@@ -112,6 +117,12 @@
                         document.head.appendChild(style);
                     }
                 }
+                // Pre-apply glass visual style
+                var savedVisual = localStorage.getItem('pf_visual');
+                if (savedVisual === 'glass') {
+                    document.documentElement.setAttribute('data-visual', 'glass');
+                }
+
             } catch (e) { }
             // Reveal page — settings already applied, no flash
             document.documentElement.style.visibility = '';
@@ -132,28 +143,34 @@
             <nav>
                 <div class="logo">&lt;/Jam&gt;</div>
                 <div class="nav-right">
-                    <ul class="nav-links" id="navLinks">
-                        <li><a href="#about">About</a></li>
-                        <li><a href="#projects">Projects</a></li>
-                        <li><a href="https://james-tercenio-resume.vercel.app/" id="resumeNavLink">Resume</a></li>
-                        <li><a href="#contact">Contact</a></li>
-                        <li class="nav-games-item"><button class="games-btn games-btn-mobile" id="gamesToggleMobile"><i
-                                    class="fa-solid fa-gamepad"></i>
-                                Mini Games</button></li>
-                        <li class="nav-games-item"><button class="games-btn games-btn-mobile"
-                                id="settingsToggleMobile"><i class="fa-solid fa-gear"></i> Appearance</button></li>
-                    </ul>
                     <button class="games-btn games-btn-desktop" id="gamesToggle"><i class="fa-solid fa-gamepad"></i>
                         Mini Games</button>
                     <button class="settings-btn" id="settingsToggle" title="Settings"><i
                             class="fa-solid fa-gear"></i></button>
-                    <button class="hamburger" id="hamburger" aria-label="Menu">
-                        <span></span><span></span><span></span>
-                    </button>
+                    <!-- placeholder keeps nav-right layout spacing on mobile -->
+                    <div class="hamburger-placeholder" aria-hidden="true"></div>
                 </div>
             </nav>
         </div>
     </header>
+
+    <!-- hamburger lives outside <header> so its z-index stacks above nav-links panel -->
+    <button class="hamburger" id="hamburger" aria-label="Menu">
+        <span></span><span></span><span></span>
+    </button>
+
+    <!-- nav-links lives outside <header> so backdrop-filter works in glass mode -->
+    <ul class="nav-links" id="navLinks">
+        <li><a href="#about">About</a></li>
+        <li><a href="#projects">Projects</a></li>
+        <li><a href="https://james-tercenio-resume.vercel.app/" id="resumeNavLink">Resume</a></li>
+        <li><a href="#contact">Contact</a></li>
+        <li class="nav-games-item"><button class="games-btn games-btn-mobile" id="gamesToggleMobile"><i
+                    class="fa-solid fa-gamepad"></i>
+                Mini Games</button></li>
+        <li class="nav-games-item"><button class="games-btn games-btn-mobile" id="settingsToggleMobile"><i
+                    class="fa-solid fa-gear"></i> Appearance</button></li>
+    </ul>
 
 
     <section class="hero" id="hero">
@@ -632,6 +649,20 @@
             </div>
             <div class="settings-body">
 
+
+                <div class="settings-group">
+                    <label>Visual Style</label>
+                    <div class="visual-style-options" id="visualStyleOptions">
+                        <button class="visual-style-btn active" data-visual="default" title="Default – solid surfaces">
+                            <div class="visual-style-icon"></div>
+                            Default
+                        </button>
+                        <button class="visual-style-btn" data-visual="glass" title="Glass – translucent glassmorphism">
+                            <div class="visual-style-icon"></div>
+                            Glass
+                        </button>
+                    </div>
+                </div>
 
                 <div class="settings-group">
                     <label>Accent Color</label>
