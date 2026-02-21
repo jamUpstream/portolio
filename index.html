@@ -28,7 +28,8 @@
                 if (accent) { localStorage.setItem('pf_accent', accent); localStorage.setItem('pf_dim', dim || accent); }
                 if (theme) localStorage.setItem('pf_theme', theme);
                 if (bgEffect) localStorage.setItem('pf_bgEffect', bgEffect);
-                if (visual) localStorage.setItem('pf_visual', visual);
+                // Always save visual when present — including 'default' so it explicitly overrides stored 'glass'
+                if (visual !== null) localStorage.setItem('pf_visual', visual);
 
                 // Handle reset signal from other site
                 if (params.get('reset') === '1') {
@@ -37,9 +38,6 @@
                     document.documentElement.style.visibility = '';
                     return; // use defaults, don't apply any saved theme
                 }
-
-                var visual = params.get('visual');
-                if (visual) localStorage.setItem('pf_visual', visual);
 
                 if (accent || theme || bgEffect || visual) history.replaceState(null, '', window.location.pathname);
 
@@ -117,10 +115,13 @@
                         document.head.appendChild(style);
                     }
                 }
-                // Pre-apply glass visual style
+                // Pre-apply glass visual style synchronously to prevent flash
                 var savedVisual = localStorage.getItem('pf_visual');
                 if (savedVisual === 'glass') {
                     document.documentElement.setAttribute('data-visual', 'glass');
+                } else {
+                    // Explicitly remove in case a stale attribute exists on the element
+                    document.documentElement.removeAttribute('data-visual');
                 }
 
             } catch (e) { }
@@ -168,8 +169,8 @@
         <li class="nav-games-item"><button class="games-btn games-btn-mobile" id="gamesToggleMobile"><i
                     class="fa-solid fa-gamepad"></i>
                 Mini Games</button></li>
-        <li class="nav-games-item"><button class="games-btn games-btn-mobile" id="settingsToggleMobile"><i
-                    class="fa-solid fa-gear"></i> Appearance</button></li>
+        <li class="nav-games-item"><button class="games-btn games-btn-mobile"
+                id="settingsToggleMobile"><i class="fa-solid fa-gear"></i> Appearance</button></li>
     </ul>
 
 
