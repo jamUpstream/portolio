@@ -746,24 +746,34 @@
         }
 
 
+        /* ═══════════════════════════════════════════
+           PAGE ENTRANCE ANIMATION
+           Plays once on load/refresh — subtle stagger
+           across the hero section elements.
+        ═══════════════════════════════════════════ */
+        @keyframes pageEnter {
+            from { opacity: 0; transform: translateY(18px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pageEnterFade {
+            from { opacity: 0; }
+            to   { opacity: 1; }
+        }
+
+        /* Background canvas/effect fades in */
+        body::before {
+            animation: pageEnterFade .8s ease-out .1s both;
+        }
+
+        /* Hero wrapper — slight upward drift */
         .hero {
             padding: 8rem 0 6rem;
             min-height: 100vh;
             animation: fadeIn .8s ease-out .2s both
         }
 
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px)
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0)
-            }
-        }
-
+        /* Individual hero elements — staggered */
         .hero-tag {
             display: inline-block;
             font-family: 'IBM Plex Mono', monospace;
@@ -774,8 +784,11 @@
             border-radius: 50px;
             border: 1px solid var(--accent-border);
             margin-bottom: 2rem;
-            animation: pulse 2s ease-in-out infinite
+            animation: pageEnter .6s ease-out .25s both, pulse 2s ease-in-out 1.2s infinite;
         }
+        .hero h1       { animation: pageEnter .65s ease-out .38s both; }
+        .hero-subtitle { animation: pageEnter .65s ease-out .50s both; }
+        .cta-button    { animation: pageEnter .65s ease-out .62s both; }
 
         @keyframes pulse {
 
