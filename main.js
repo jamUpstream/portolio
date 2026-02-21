@@ -871,11 +871,9 @@ function applyBgEffect(type, rgb) {
         if (hexCanvas) { hexCanvas.style.display = 'none'; stopHexCanvas(); }
     }
 
-    // Re-pin glass depth layer above canvases — canvas effects use prepend() which
-    // pushes the depth layer down. Move it back to firstChild so it renders on top.
-    const depthLayer = document.getElementById('glass-depth-layer');
-    if (depthLayer && document.documentElement.getAttribute('data-visual') === 'glass') {
-        document.body.insertBefore(depthLayer, document.body.firstChild);
+    // Re-pin depth layer after canvases whenever bg effect changes
+    if (document.documentElement.getAttribute('data-visual') === 'glass') {
+        try { updateGlassDepthLayer(); } catch(e) {}
     }
 }
 
@@ -1189,7 +1187,6 @@ function ensureGlassDepthLayer(style) {
 function updateGlassDepthLayer() {
     const layer = document.getElementById('glass-depth-layer');
     if (!layer) return;
-    // Get accent rgb from current CSS vars
     const accentHex = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#00F5A0';
     const aRgb = hexToRgb(accentHex);
     const [ar, ag, ab] = aRgb.split(',');
@@ -1198,7 +1195,7 @@ function updateGlassDepthLayer() {
         'position:fixed',
         'inset:0',
         'pointer-events:none',
-        'z-index:1',   // above canvases (z-index:0) but below all content (z-index:1+)
+        'z-index:0',
         'background:' + [
             `radial-gradient(ellipse 75% 55% at 12% 18%, rgba(${ar},${ag},${ab},0.13) 0%, transparent 55%)`,
             `radial-gradient(ellipse 60% 45% at 88% 80%, rgba(0,140,255,0.11) 0%, transparent 55%)`,
@@ -1208,6 +1205,25 @@ function updateGlassDepthLayer() {
             `radial-gradient(ellipse 30% 25% at 60% 85%, rgba(255,255,255,0.05) 0%, transparent 45%)`
         ].join(',')
     ].join(';');
+    // Pin depth layer AFTER all canvases so it paints on top at the same z-index
+    // (later in DOM order = higher paint order at equal z-index)
+    _pinDepthLayerAfterCanvases(layer);
+}
+
+function _pinDepthLayerAfterCanvases(layer) {
+    // Find the last canvas in body's direct children
+    const children = Array.from(document.body.children);
+    let lastCanvas = null;
+    for (const el of children) {
+        if (el.tagName === 'CANVAS') lastCanvas = el;
+    }
+    if (lastCanvas && lastCanvas.nextSibling !== layer) {
+        // Insert depth layer right after the last canvas
+        document.body.insertBefore(layer, lastCanvas.nextSibling);
+    } else if (!lastCanvas && document.body.firstChild !== layer) {
+        // No canvases — keep at top
+        document.body.insertBefore(layer, document.body.firstChild);
+    }
 }
 
 // --- Visual Style (Default / Glass) ---

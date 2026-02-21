@@ -132,7 +132,7 @@
             margin: 0 auto;
             padding: 0 2rem;
             position: relative;
-            z-index: 2
+            z-index: 1
         }
 
 
@@ -146,7 +146,12 @@
             backdrop-filter: blur(12px);
             border-bottom: 1px solid var(--border);
             z-index: 1100;
-            animation: slideDown .6s ease-out
+            animation: slideDown .5s ease-out;
+        }
+
+        @keyframes slideDown {
+            from { transform: translateY(-100%); }
+            to   { transform: translateY(0); }
         }
 
         @keyframes slideDown {
@@ -196,6 +201,14 @@
             transform: translateX(-50%);
             z-index: 1100;
             background: transparent;
+            animation: navLinksSlide .5s ease-out;
+        }
+
+        /* Must combine translateX(-50%) centering with the Y slide —
+           using slideDown alone would overwrite translateX and break centering */
+        @keyframes navLinksSlide {
+            from { transform: translateX(-50%) translateY(-100%); }
+            to   { transform: translateX(-50%) translateY(0); }
         }
 
         .nav-links a {
@@ -1650,6 +1663,18 @@
                 display: flex;
                 /* Align vertically to header center */
                 top: calc(var(--header-h, 75px) / 2);
+                animation: hamburgerSlide .5s ease-out;
+            }
+
+            /* hamburger uses translateY(-50%) for centering — must combine both in keyframe */
+            @keyframes hamburgerSlide {
+                from { transform: translateY(calc(-50% - var(--header-h, 75px))); }
+                to   { transform: translateY(-50%); }
+            }
+
+            /* Cancel the desktop navLinksSlide — mobile nav is a side panel, not a top bar */
+            .nav-links {
+                animation: none;
             }
 
             .hamburger-placeholder {
