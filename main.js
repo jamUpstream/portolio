@@ -870,6 +870,13 @@ function applyBgEffect(type, rgb) {
         if (rainCanvas) { rainCanvas.style.display = 'none'; stopRainCanvas(); }
         if (hexCanvas) { hexCanvas.style.display = 'none'; stopHexCanvas(); }
     }
+
+    // Re-pin glass depth layer above canvases — canvas effects use prepend() which
+    // pushes the depth layer down. Move it back to firstChild so it renders on top.
+    const depthLayer = document.getElementById('glass-depth-layer');
+    if (depthLayer && document.documentElement.getAttribute('data-visual') === 'glass') {
+        document.body.insertBefore(depthLayer, document.body.firstChild);
+    }
 }
 
 // ── Matrix Canvas Animation ──
@@ -1187,10 +1194,11 @@ function updateGlassDepthLayer() {
     const aRgb = hexToRgb(accentHex);
     const [ar, ag, ab] = aRgb.split(',');
     layer.style.cssText = [
+        'display:block',
         'position:fixed',
         'inset:0',
         'pointer-events:none',
-        'z-index:0',
+        'z-index:1',   // above canvases (z-index:0) but below all content (z-index:1+)
         'background:' + [
             `radial-gradient(ellipse 75% 55% at 12% 18%, rgba(${ar},${ag},${ab},0.13) 0%, transparent 55%)`,
             `radial-gradient(ellipse 60% 45% at 88% 80%, rgba(0,140,255,0.11) 0%, transparent 55%)`,
