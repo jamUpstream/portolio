@@ -132,7 +132,6 @@
             margin: 0 auto;
             padding: 0 2rem;
             position: relative;
-            z-index: 1
         }
 
 
@@ -1366,11 +1365,12 @@
 
         /* In glass mode, disable reveal animations on cards so they don't create
            stacking contexts that trap backdrop-filter (making blur invisible).
-           Cards are instantly visible; the depth layer blur shows through. */
-        html[data-visual="glass"] .fade-in-up,
-        html[data-visual="glass"] .fade-in-up.revealed,
-        html[data-visual="glass"] .scroll-reveal,
-        html[data-visual="glass"] .scroll-reveal.revealed {
+           BUT during page entrance (data-glass-entering), allow animations to play
+           normally so the entrance animation works on first load/refresh. */
+        html[data-visual="glass"]:not([data-glass-entering]) .fade-in-up,
+        html[data-visual="glass"]:not([data-glass-entering]) .fade-in-up.revealed,
+        html[data-visual="glass"]:not([data-glass-entering]) .scroll-reveal,
+        html[data-visual="glass"]:not([data-glass-entering]) .scroll-reveal.revealed {
             animation: none !important;
             opacity: 1 !important;
             translate: none !important;
@@ -1503,8 +1503,8 @@
         }
 
         .reaction-area.ready {
-            background: #0d1f12;
-            border-color: var(--accent)
+            background: var(--reaction-ready-bg, var(--primary));
+            border-color: var(--reaction-ready-border, #00c853)
         }
 
         .reaction-area.too-soon {
@@ -2087,7 +2087,7 @@ html[data-visual="glass"] .settings-header.scrolled {
 
 /* ── Games Panel & Overlay ── */
 html[data-visual="glass"] .games-panel {
-    background: color-mix(in srgb, var(--primary) 62%, transparent) !important;
+    background: color-mix(in srgb, var(--primary) 85%, transparent) !important;
     backdrop-filter: blur(28px) saturate(160%) !important;
     -webkit-backdrop-filter: blur(28px) saturate(160%) !important;
     border: 1px solid rgba(255,255,255,0.13) !important;
@@ -2220,19 +2220,28 @@ html[data-visual="glass"] .theme-opt.active {
 
 /* ── Reaction area ── */
 html[data-visual="glass"] .reaction-area {
-    background: color-mix(in srgb, var(--primary) 50%, transparent) !important;
+    background: color-mix(in srgb, var(--primary) 65%, transparent) !important;
     backdrop-filter: blur(12px) !important;
     -webkit-backdrop-filter: blur(12px) !important;
     border-color: rgba(255,255,255,0.12) !important;
 }
 
 html[data-visual="glass"] .reaction-area.ready {
-    background: rgba(0, 80, 30, 0.30) !important;
-    border-color: var(--accent) !important;
+    background: var(--secondary) !important;
+    border-color: var(--reaction-ready-border, var(--accent)) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+
+html[data-visual="glass"] .reaction-area:not(.ready):not(.too-soon) {
+    background: color-mix(in srgb, var(--primary) 80%, transparent) !important;
 }
 
 html[data-visual="glass"] .reaction-area.too-soon {
-    background: rgba(100, 20, 20, 0.30) !important;
+    background: #2a0a0a !important;
+    border-color: #f55 !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
 }
 
 /* ── Typing & Aim game inner boxes ── */

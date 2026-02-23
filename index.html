@@ -119,6 +119,8 @@
                 var savedVisual = localStorage.getItem('pf_visual');
                 if (savedVisual === 'glass') {
                     document.documentElement.setAttribute('data-visual', 'glass');
+                    // Allow entrance animations to play during load, then remove after they finish
+                    document.documentElement.setAttribute('data-glass-entering', '');
                 } else {
                     // Explicitly remove in case a stale attribute exists on the element
                     document.documentElement.removeAttribute('data-visual');

@@ -72,11 +72,54 @@ const reactionArea = document.getElementById('reactionArea');
 const reactionMsg = document.getElementById('reactionMsg');
 const reactionSub = document.getElementById('reactionSub');
 const reactionScores = document.getElementById('reactionScoreList');
-function reactionReset() { reactionState = 'idle'; reactionArea.className = 'reaction-area'; reactionMsg.textContent = 'Click to Start'; reactionSub.textContent = 'Test your reaction time' }
+function reactionReset() {
+    reactionState = 'idle';
+    reactionArea.className = 'reaction-area';
+    reactionArea.style.background = '';
+    reactionMsg.textContent = 'Click to Start';
+    reactionSub.textContent = 'Test your reaction time';
+}
 reactionArea.addEventListener('click', () => {
-    if (reactionState === 'idle') { reactionState = 'waiting'; reactionMsg.textContent = 'Wait for go…'; reactionSub.textContent = 'Don\'t click yet!'; const delay = 1500 + Math.random() * 3000; reactionTimer = setTimeout(() => { reactionState = 'ready'; reactionArea.classList.add('ready'); reactionMsg.textContent = 'CLICK NOW!'; reactionSub.textContent = ''; reactionStart = performance.now() }, delay) }
-    else if (reactionState === 'waiting') { clearTimeout(reactionTimer); reactionArea.classList.add('too-soon'); reactionMsg.textContent = 'Too soon!'; reactionSub.textContent = 'Wait for green'; setTimeout(reactionReset, 1200) }
-    else if (reactionState === 'ready') { const ms = Math.round(performance.now() - reactionStart); reactionState = 'idle'; reactionArea.className = 'reaction-area'; reactionMsg.textContent = `${ms}ms`; reactionSub.textContent = ms < 200 ? 'Superhuman!' : ms < 300 ? 'Very fast!' : ms < 500 ? 'Good!' : 'Try again!'; const chip = document.createElement('div'); chip.className = 'score-chip'; chip.textContent = ms + 'ms'; reactionScores.prepend(chip); if (reactionScores.children.length > 6) reactionScores.removeChild(reactionScores.lastChild) }
+    if (reactionState === 'idle') {
+        reactionState = 'waiting';
+        reactionMsg.textContent = 'Wait for go…';
+        reactionSub.textContent = 'Don\'t click yet!';
+        const delay = 1500 + Math.random() * 3000;
+        reactionTimer = setTimeout(() => {
+            reactionState = 'ready';
+            reactionArea.classList.add('ready');
+            // In glass mode, force solid background via inline style to prevent
+            // backdrop-filter bleed from panel tinting the ready state
+            if (document.documentElement.getAttribute('data-visual') === 'glass') {
+                const primary = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim();
+                reactionArea.style.background = primary;
+            }
+            reactionMsg.textContent = 'CLICK NOW!';
+            reactionSub.textContent = '';
+            reactionStart = performance.now();
+        }, delay);
+    }
+    else if (reactionState === 'waiting') {
+        clearTimeout(reactionTimer);
+        reactionArea.classList.add('too-soon');
+        reactionArea.style.background = '';
+        reactionMsg.textContent = 'Too soon!';
+        reactionSub.textContent = 'Wait for green';
+        setTimeout(reactionReset, 1200);
+    }
+    else if (reactionState === 'ready') {
+        const ms = Math.round(performance.now() - reactionStart);
+        reactionState = 'idle';
+        reactionArea.className = 'reaction-area';
+        reactionArea.style.background = '';
+        reactionMsg.textContent = `${ms}ms`;
+        reactionSub.textContent = ms < 200 ? 'Superhuman!' : ms < 300 ? 'Very fast!' : ms < 500 ? 'Good!' : 'Try again!';
+        const chip = document.createElement('div');
+        chip.className = 'score-chip';
+        chip.textContent = ms + 'ms';
+        reactionScores.prepend(chip);
+        if (reactionScores.children.length > 6) reactionScores.removeChild(reactionScores.lastChild);
+    }
 });
 
 // ===================== TYPING GAME =====================
@@ -335,10 +378,10 @@ function applyAccent(accent, dim) {
     root.style.setProperty('--accent-glow', `rgba(${rgb},.4)`);
     root.style.setProperty('--accent-shadow', `rgba(${rgb},.1)`);
     root.style.setProperty('--accent-shadow-lg', `rgba(${rgb},.3)`);
-    // Also update the reaction-area ready bg color (hardcoded green)
-    let reactStyle = document.getElementById('react-accent-style');
-    if (!reactStyle) { reactStyle = document.createElement('style'); reactStyle.id = 'react-accent-style'; document.head.appendChild(reactStyle); }
-    reactStyle.textContent = `.reaction-area.ready { background: rgba(${rgb},.08) !important; border-color: ${accent} !important; }`;
+    // Set reaction ready state via CSS variables — default mode uses accent tint,
+    // glass mode CSS overrides these with fixed green (no backdrop-filter bleed)
+    root.style.setProperty('--reaction-ready-bg', `color-mix(in srgb, ${accent} 12%, var(--primary))`);
+    root.style.setProperty('--reaction-ready-border', accent);
     // Patch body::before grid color
     applyBgEffect(currentBgEffect, rgb);
     // Update glass depth layer if glass mode is active
@@ -1402,6 +1445,7 @@ function _pinDepthLayerAfterCanvases(layer) {
             document.documentElement.setAttribute('data-visual', 'glass');
         } else {
             document.documentElement.removeAttribute('data-visual');
+            document.documentElement.removeAttribute('data-glass-entering');
         }
         // Keep the depth layer in sync with the visual style
         try { ensureGlassDepthLayer(style); } catch (e) { }
@@ -1419,6 +1463,14 @@ function _pinDepthLayerAfterCanvases(layer) {
     // Load saved style — fallback 'default' ensures Default btn is always marked active on fresh load
     const savedVisual = loadSetting('visual') || 'default';
     applyVisualStyle(savedVisual);
+
+    // Remove data-glass-entering after entrance animations finish (~1.6s covers the longest delay+duration)
+    // This allows entrance animations to play on load, then switches to stacking-context-safe glass state
+    if (document.documentElement.hasAttribute('data-glass-entering')) {
+        setTimeout(() => {
+            document.documentElement.removeAttribute('data-glass-entering');
+        }, 1600);
+    }
 })();
 
 // --- Color Swatches ---
