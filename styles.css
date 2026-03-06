@@ -2830,6 +2830,42 @@
             50%       { opacity: 0.35; }
         }
 
+        /* ── Reset / clear chat button — pinned to top-right of header ── */
+        #chat-reset-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-dim);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 5px;
+            border-radius: 7px;
+            transition: color 0.15s, background 0.15s;
+            flex-shrink: 0;
+            /* flex: 1 on #chat-header-info pushes this to the far right */
+            margin-left: 0;
+        }
+        #chat-reset-btn svg {
+            width: 14px;
+            height: 14px;
+            display: block;
+        }
+        #chat-reset-btn:hover {
+            color: var(--accent);
+            background: var(--accent-bg);
+        }
+        #chat-reset-btn.spinning svg {
+            animation: resetShake 0.4s ease-in-out;
+        }
+        @keyframes resetShake {
+            0%,100% { transform: translateX(0) rotate(0deg); }
+            20%     { transform: translateX(-2px) rotate(-8deg); }
+            40%     { transform: translateX(2px) rotate(8deg); }
+            60%     { transform: translateX(-2px) rotate(-5deg); }
+            80%     { transform: translateX(1px) rotate(3deg); }
+        }
+
         /* ── Messages ── */
         #chat-messages {
             flex: 1; overflow-y: auto;
@@ -2873,21 +2909,28 @@
         }
 
         /* ── Typing indicator ── */
-        #typing-indicator {
-            padding: 6px 15px 2px; display: flex; align-items: center; gap: 4px;
-            flex-shrink: 0; position: relative; z-index: 1;
+        /* Typing bubble — renders as a bot chat bubble with bouncing dots */
+        .typing-bubble {
+            display: flex !important;
+            align-items: center;
+            gap: 5px;
+            padding: 11px 16px;
+            min-width: 56px;
         }
-        #typing-indicator span {
-            width: 6px; height: 6px; border-radius: 50%;
-            background: var(--accent); opacity: 0.5;
+        .typing-bubble span {
+            width: 7px; height: 7px; border-radius: 50%;
+            background: var(--accent); opacity: 0.6;
+            flex-shrink: 0;
             animation: chatBounce 1.2s infinite ease-in-out;
         }
-        #typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
-        #typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+        .typing-bubble span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-bubble span:nth-child(3) { animation-delay: 0.4s; }
         @keyframes chatBounce {
             0%, 60%, 100% { transform: translateY(0); }
-            30%           { transform: translateY(-5px); }
+            30%           { transform: translateY(-6px); }
         }
+        /* Hide the legacy typing indicator element */
+        #typing-indicator { display: none !important; }
 
         /* ── Input area ── */
         #chat-input-area {

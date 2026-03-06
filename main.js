@@ -1867,7 +1867,8 @@ document.getElementById('settingsReset').addEventListener('click', () => {
 You are a portfolio support assistant representing Jam professionally.
 
 WHO YOU ARE:
-- You are Jam's AI assistant, here to answer questions about Jam's background, skills, experience, and work.
+- You are Jam's AI assistant, here to answer questions about Jam's background,
+  skills, experience, and work.
 
 WHO JAM IS:
 - Jam is a System Automation Engineer specializing in building intelligent workflows that scale businesses.
@@ -1877,19 +1878,30 @@ WHO JAM IS:
 WHAT YOU KNOW ABOUT JAM:
 - Portfolio: https://james-tercenio-portfolio.vercel.app/
 - Core Tech Stack & Proficiency:
-    - Zapier / Make: 92%, Airtable CRM: 99%, Jotform: 88%,
-      Google Apps Script: 86%, GoHighLevel: 75%,
-      JavaScript / HTML: 70%, SOP Documentation: 95%
-- Key Featured Projects: End-to-End Property Sourcing CRM, Modular Zapier Architecture,
-  Lightweight Airtable CRM, Tiered Access System, Jotform to Airtable Dynamic Sync,
-  Automated Asset Packaging.
-- Games & Utilities: Bark of Survival v1/v2, Freeworm.io, Yatzy, Memory Game,
-  Tic Tac Toe, Rock-Paper-Scissors, SynthCalc, Barcode Generator, Currency Converter (Coinage).
+    - Zapier / Make: 92% (Complex webhooks, routers, error handling)
+    - Airtable CRM: 99% (Custom builds, permissions, views, and automations)
+    - Jotform: 88% (Conditional logic, file uploads, data capture)
+    - Google Apps Script: 86% (Sheets/Docs automation)
+    - GoHighLevel: 75% (CRM & Funnel automation)
+    - JavaScript / HTML: 70% (Custom utilities, dashboards, and mini-games)
+    - SOP Documentation: 95% (Scaling-ready handoffs)
+- Key Featured Projects:
+    - End-to-End Property Sourcing CRM: A centralized Airtable system for real estate investors that automates investor onboarding, NDA tracking, and segmented deal broadcasting via GHL.
+    - Modular Zapier Architecture: A scalable system using shared webhooks and sub-zaps to handle multiple workflows without duplication.
+    - Lightweight Airtable CRM: A custom-built CRM providing essential functionality without the bloat of traditional platforms.
+    - Tiered Access System: Automated segmentation based on subscription levels (VIP vs. Standard).
+    - Jotform to Airtable Dynamic Sync: Advanced form submissions with hidden fields and conditional logic.
+    - Automated Asset Packaging: A system using Google Sheets and JS to dynamically name and deliver email assets, reducing manual packaging time to zero.
+- Games & Utilities:
+    - Web-based browser games using HTML5 Canvas and JavaScript (Bark of Survival v1/v2, Freeworm.io).
+    - Classic Logic Games: Yatzy, Memory Game, Tic Tac Toe, Rock-Paper-Scissors.
+    - Utilities: SynthCalc, Barcode Generator, Currency Converter (Coinage).
 - Contact: Use the "Let's Work Together" form on the portfolio for inquiries.
 
 BEHAVIOUR RULES:
 - Always respond in a friendly, concise, and professional tone.
-- If you do not know something specific about Jam, say so honestly and suggest the visitor reaches out directly.
+- If you do not know something specific about Jam, say so honestly and suggest
+  the visitor reaches out directly.
 - Never invent facts about Jam that are not provided above.
 - Keep answers short unless detail is explicitly requested.
 `.trim();
@@ -1925,7 +1937,9 @@ BEHAVIOUR RULES:
     const chatMsgs    = document.getElementById("chat-messages");
     const chatInput   = document.getElementById("chat-input");
     const sendBtn     = document.getElementById("send-btn");
+    const resetBtn    = document.getElementById("chat-reset-btn");
     const typingInd   = document.getElementById("typing-indicator");
+    let typingBubble  = null;
     const iconOpen    = document.getElementById("icon-open");
     const iconClose   = document.getElementById("icon-close");
 
@@ -1937,8 +1951,24 @@ BEHAVIOUR RULES:
         chatMsgs.scrollTop = chatMsgs.scrollHeight;
     }
     function setTyping(v) {
-        typingInd.style.display = v ? "flex" : "none";
-        if (v) chatMsgs.scrollTop = chatMsgs.scrollHeight;
+        // Keep the hidden element in sync (legacy)
+        typingInd.style.display = "none";
+        if (v) {
+            // Insert typing bubble into the messages area
+            if (!typingBubble) {
+                typingBubble = document.createElement("div");
+                typingBubble.classList.add("chat-msg", "bot", "typing-bubble");
+                typingBubble.innerHTML = "<span></span><span></span><span></span>";
+                chatMsgs.appendChild(typingBubble);
+            }
+            chatMsgs.scrollTop = chatMsgs.scrollHeight;
+        } else {
+            // Remove the bubble
+            if (typingBubble) {
+                typingBubble.remove();
+                typingBubble = null;
+            }
+        }
     }
     function setLocked(v) { chatInput.disabled = v; sendBtn.disabled = v; }
 
@@ -1987,6 +2017,23 @@ BEHAVIOUR RULES:
             chatInput.focus();
         }
     }
+
+    /* ── Reset / clear chat ── */
+    function resetChat() {
+        // Clear message bubbles
+        chatMsgs.innerHTML = "";
+        // Remove any typing bubble
+        typingBubble = null;
+        // Reset conversation history, keeping only the system prompt
+        conversationHistory.splice(1);
+        // Spin the icon for feedback
+        resetBtn.classList.add("spinning");
+        setTimeout(() => resetBtn.classList.remove("spinning"), 400);
+        // Show fresh greeting
+        appendMsg("Hi! I'm Jam's assistant. Ask me anything about Jam's work, skills, or availability!", "bot");
+    }
+
+    resetBtn.addEventListener("click", resetChat);
 
     sendBtn.addEventListener("click", handleSend);
     chatInput.addEventListener("keydown", e => {
