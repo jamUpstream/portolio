@@ -1856,3 +1856,140 @@ document.getElementById('settingsReset').addEventListener('click', () => {
         document.querySelectorAll('[data-bg]').forEach(b => b.classList.toggle('active', b.dataset.bg === bgEffect));
     }
 })();
+
+/* ═══════════════════════════════════════════════════════
+   AI CHATBOT WIDGET — fixed position beside back-to-top
+═══════════════════════════════════════════════════════ */
+(function () {
+    const GROQ_MODEL = "llama-3.3-70b-versatile";
+
+    const SYSTEM_CONTEXT = `
+You are a portfolio support assistant representing Jam professionally.
+
+WHO YOU ARE:
+- You are Jam's AI assistant, here to answer questions about Jam's background, skills, experience, and work.
+
+WHO JAM IS:
+- Jam is a System Automation Engineer specializing in building intelligent workflows that scale businesses.
+- Jam specializes in no-code/low-code automation systems, CRM development, and process optimization to eliminate manual work and drive revenue.
+- Jam focuses on clean logic, stable integrations, and documentation to ensure systems remain maintainable.
+
+WHAT YOU KNOW ABOUT JAM:
+- Portfolio: https://james-tercenio-portfolio.vercel.app/
+- Core Tech Stack & Proficiency:
+    - Zapier / Make: 92%, Airtable CRM: 99%, Jotform: 88%,
+      Google Apps Script: 86%, GoHighLevel: 75%,
+      JavaScript / HTML: 70%, SOP Documentation: 95%
+- Key Featured Projects: End-to-End Property Sourcing CRM, Modular Zapier Architecture,
+  Lightweight Airtable CRM, Tiered Access System, Jotform to Airtable Dynamic Sync,
+  Automated Asset Packaging.
+- Games & Utilities: Bark of Survival v1/v2, Freeworm.io, Yatzy, Memory Game,
+  Tic Tac Toe, Rock-Paper-Scissors, SynthCalc, Barcode Generator, Currency Converter (Coinage).
+- Contact: Use the "Let's Work Together" form on the portfolio for inquiries.
+
+BEHAVIOUR RULES:
+- Always respond in a friendly, concise, and professional tone.
+- If you do not know something specific about Jam, say so honestly and suggest the visitor reaches out directly.
+- Never invent facts about Jam that are not provided above.
+- Keep answers short unless detail is explicitly requested.
+`.trim();
+
+    const conversationHistory = [{ role: "system", content: SYSTEM_CONTEXT }];
+
+    async function getGroqReply(userMessage) {
+        conversationHistory.push({ role: "user", content: userMessage });
+        const payload = {
+            model: GROQ_MODEL,
+            messages: conversationHistory,
+            temperature: 0.7,
+            max_tokens: 512,
+            stream: false,
+        };
+        const response = await fetch("/api/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+        });
+        if (!response.ok) {
+            const err = await response.json().catch(() => ({}));
+            throw new Error(err?.error?.message || `API error ${response.status}`);
+        }
+        const data = await response.json();
+        const replyText = data?.choices?.[0]?.message?.content || "Sorry, I couldn't generate a response.";
+        conversationHistory.push({ role: "assistant", content: replyText });
+        return replyText;
+    }
+
+    const chatToggle  = document.getElementById("chat-toggle");
+    const chatPanel   = document.getElementById("chat-panel");
+    const chatMsgs    = document.getElementById("chat-messages");
+    const chatInput   = document.getElementById("chat-input");
+    const sendBtn     = document.getElementById("send-btn");
+    const typingInd   = document.getElementById("typing-indicator");
+    const iconOpen    = document.getElementById("icon-open");
+    const iconClose   = document.getElementById("icon-close");
+
+    function appendMsg(text, role) {
+        const b = document.createElement("div");
+        b.classList.add("chat-msg", role);
+        b.textContent = text;
+        chatMsgs.appendChild(b);
+        chatMsgs.scrollTop = chatMsgs.scrollHeight;
+    }
+    function setTyping(v) {
+        typingInd.style.display = v ? "flex" : "none";
+        if (v) chatMsgs.scrollTop = chatMsgs.scrollHeight;
+    }
+    function setLocked(v) { chatInput.disabled = v; sendBtn.disabled = v; }
+
+    let panelOpen = false;
+
+    function openPanel() {
+        panelOpen = true;
+        chatPanel.classList.add("open");
+        chatPanel.setAttribute("aria-hidden", "false");
+        iconOpen.style.display  = "none";
+        iconClose.style.display = "block";
+        chatInput.focus();
+        if (chatMsgs.children.length === 0) {
+            appendMsg("Hi! I'm Jam's assistant. Ask me anything about Jam's work, skills, or availability!", "bot");
+        }
+    }
+
+    function closePanel() {
+        panelOpen = false;
+        chatPanel.classList.remove("open");
+        chatPanel.setAttribute("aria-hidden", "true");
+        iconOpen.style.display  = "block";
+        iconClose.style.display = "none";
+    }
+
+    chatToggle.addEventListener("click", () => {
+        panelOpen ? closePanel() : openPanel();
+    });
+
+    async function handleSend() {
+        const text = chatInput.value.trim();
+        if (!text) return;
+        appendMsg(text, "user");
+        chatInput.value = "";
+        setLocked(true);
+        setTyping(true);
+        try {
+            const reply = await getGroqReply(text);
+            setTyping(false);
+            appendMsg(reply, "bot");
+        } catch (err) {
+            setTyping(false);
+            appendMsg("Error: " + err.message, "error");
+        } finally {
+            setLocked(false);
+            chatInput.focus();
+        }
+    }
+
+    sendBtn.addEventListener("click", handleSend);
+    chatInput.addEventListener("keydown", e => {
+        if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); }
+    });
+})();
